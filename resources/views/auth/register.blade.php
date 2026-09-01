@@ -44,7 +44,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('register') }}" method="POST">
+            <form id="register-form" action="{{ route('register') }}" method="POST">
 
                 @csrf
 
@@ -122,12 +122,13 @@
                 </button>
 
 
-                <a
-                    href="{{ route('login') }}"
+                <button
+                    type="button"
+                    id="show-login"
                     class="btn btn-outline-light w-100"
                 >
                     Kembali ke Login
-                </a>
+                </button>
 
             </form>
 

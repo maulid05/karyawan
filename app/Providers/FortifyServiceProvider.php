@@ -13,6 +13,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable;
 use Laravel\Fortify\Fortify;
+use Laravel\Fortify\Contracts\LoginResponse;
+
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -21,7 +23,29 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(LoginResponse::class, function () {
+        return new class implements LoginResponse {
+
+            public function toResponse($request)
+            {
+                $user = $request->user();
+
+                if ($user->hasRoles(['superadmin'])) {
+                    return redirect()->route('home');
+                }
+
+                if ($user->hasRoles(['client'])) {
+                    return redirect()->route('homepage');
+                }
+
+                if ($user->hasRoles(['admin'])) {   
+                    return redirect()->route('dashboard');
+                }
+
+                abort(403);
+            }
+        };
+    });
     }
 
     /**
@@ -69,4 +93,5 @@ class FortifyServiceProvider extends ServiceProvider
             );
         });
     }
+    
 }
