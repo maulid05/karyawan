@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DataPribadi;
-use Illuminate\Http\Request;
+use App\Models\LainLain;
+use App\Http\Requests\StoreLainLainRequest;
+use App\Http\Requests\UpdateLainLainRequest;
 
-class DataPribadiController extends Controller
+class LainLainController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -26,7 +27,7 @@ class DataPribadiController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreLainLainRequest $request)
     {
         //
     }
@@ -34,19 +35,15 @@ class DataPribadiController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(String $id )
+    public function show(LainLain $lainLain)
     {
-        //dd($id);
-
-        $user = DataPribadi::Where('user_id', $id)->with('user')->first();
-
-        return view('auth.profile', compact('user'));
+        //
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit()
+    public function edit(LainLain $lainLain)
     {
         //
     }
@@ -54,7 +51,7 @@ class DataPribadiController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateDataPribadiRequest $request, Request $dataPribadi)
+    public function update(UpdateLainLainRequest $request, LainLain $lainLain)
     {
         //
     }
@@ -62,7 +59,7 @@ class DataPribadiController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $dataPribadi)
+    public function destroy(LainLain $lainLain)
     {
         //
     }

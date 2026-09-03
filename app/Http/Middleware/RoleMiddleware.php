@@ -18,6 +18,8 @@ class RoleMiddleware
 
         $user = $request->user();
 
+        //dd($user, $next, $request)
+
         if (!$user) {
             abort(401);
         }

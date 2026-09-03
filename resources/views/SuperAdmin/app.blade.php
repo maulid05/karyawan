@@ -191,7 +191,7 @@
         <nav class="nav flex-column">
 
             <a
-                href="{{ route('home') }}"
+                href="#"
                 class="nav-link active"
             >
                 Dashboard
@@ -298,7 +298,7 @@
 
                             <a
                                 class="dropdown-item"
-                                href="#"
+                                href="{{ route('cek', Auth::user()->id) }}"
                             >
                                 Profile
                             </a>
