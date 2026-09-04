@@ -13,6 +13,14 @@ return new class extends Migration
     {
         Schema::create('profil_akademiks', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->String('Rumpun_Ilmu')->nullable();
+            $table->String('Pohon_Ilmu')->nullable();
+            $table->String('Kelompok_Ilmu')->nullable();
+            $table->String('Cabang_Ilmu')->nullable();
+            $table->String('Scopus_Id')->nullable();
+            $table->String('Scopus_Link')->nullable();
+            $table->String('Scopus_H_Index')->nullable();
             $table->timestamps();
         });
     }

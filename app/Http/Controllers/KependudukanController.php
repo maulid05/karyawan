@@ -3,64 +3,35 @@
 namespace App\Http\Controllers;
 
 use App\Models\Kependudukan;
-use App\Http\Requests\StoreKependudukanRequest;
-use App\Http\Requests\UpdateKependudukanRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class KependudukanController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function update(Request $request, string $id)
     {
-        //
-    }
+        $kependudukan = Kependudukan::where('id', $id)
+            ->firstOrFail();
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+        $request->validate([
+            'NIK' => [
+                'nullable',
+                'regex:/^(?:-|[0-9]{16})$/'
+            ],
+        ], [
+            'NIK.regex' => 'NIK harus terdiri dari 16 digit angka atau "-".',
+        ]);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreKependudukanRequest $request)
-    {
-        //
-    }
+        foreach ($request->all() as $key => $value) {
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Kependudukan $kependudukan)
-    {
-        //
-    }
+            if (Schema::hasColumn('kependudukans', $key)) {
+                $kependudukan->$key = $value ?: '-';
+            }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Kependudukan $kependudukan)
-    {
-        //
-    }
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateKependudukanRequest $request, Kependudukan $kependudukan)
-    {
-        //
-    }
+        $kependudukan->save();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Kependudukan $kependudukan)
-    {
-        //
+        return redirect()->back();
     }
 }

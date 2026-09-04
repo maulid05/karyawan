@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Kontak;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
+use App\Models\Timeline;
+use App\Http\Requests\StoreTimelineRequest;
+use App\Http\Requests\UpdateTimelineRequest;
 
-class KontakController extends Controller
+class TimelineController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -27,7 +27,7 @@ class KontakController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreKontakRequest $request)
+    public function store(StoreTimelineRequest $request)
     {
         //
     }
@@ -35,7 +35,7 @@ class KontakController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Kontak $kontak)
+    public function show(Timeline $timeline)
     {
         //
     }
@@ -43,7 +43,7 @@ class KontakController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Kontak $kontak)
+    public function edit(Timeline $timeline)
     {
         //
     }
@@ -51,26 +51,15 @@ class KontakController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateTimelineRequest $request, Timeline $timeline)
     {
-        $kontak = Kontak::where('id', $id)
-            ->firstOrFail();
-
-        foreach ($request->all() as $key => $value) {
-            if (Schema::hasColumn('kontaks', $key)) {
-                $kontak->$key = $value ?: '-';
-            }
-        }
-
-        $kontak->save();
-
-        return redirect()->back();
+        //
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Kontak $kontak)
+    public function destroy(Timeline $timeline)
     {
         //
     }

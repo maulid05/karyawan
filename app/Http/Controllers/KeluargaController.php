@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Keluarga;
-use App\Http\Requests\StoreKeluargaRequest;
-use App\Http\Requests\UpdateKeluargaRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class KeluargaController extends Controller
 {
@@ -51,9 +51,19 @@ class KeluargaController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateKeluargaRequest $request, Keluarga $keluarga)
+    public function update(Request $request, string $id)
     {
-        //
+        $keluarga = Keluarga::where('id', $id)->firstOrFail();
+
+        foreach ($request->all() as $key => $value) {
+            if (Schema::hasColumn('keluargas', $key)) {
+                $keluarga->$key = $value ?: '-';
+            }
+        }
+
+        $keluarga->save();
+
+        return redirect()->back();
     }
 
     /**

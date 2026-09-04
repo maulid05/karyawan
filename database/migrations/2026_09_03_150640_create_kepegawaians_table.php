@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('kepegawaians', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->String('Nomor_SK')->nullable();
+            $table->String('Tanggal_Masuk')->nullable();
+            $table->String('Sumber_Gaji')->nullable();
+            $table->String('Nama_Jabatan')->nullable();
             $table->timestamps();
         });
     }

@@ -2,11 +2,23 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class kepegawaian extends Model
+class Kepegawaian extends Model
 {
-    /** @use HasFactory<\Database\Factories\KepegawaianFactory> */
-    use HasFactory;
+    protected $table = 'kepegawaians';
+
+    protected $fillable = [
+        'user_id',
+        'Nomor_SK',
+        'Tanggal_Masuk',
+        'Sumber_Gaji',
+        'Nama_Jabatan',
+    ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 }

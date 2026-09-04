@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DataPribadi;
+use App\Models\{DataPribadi, Kependudukan, Keluarga, Kontak};
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class DataPribadiController extends Controller
 {
@@ -38,9 +39,14 @@ class DataPribadiController extends Controller
     {
         //dd($id);
 
-        $user = DataPribadi::Where('user_id', $id)->with('user')->first();
+        $datapribadi = DataPribadi::Where('user_id', $id)->with('user')->first();
+        $kependudukan = Kependudukan::where('user_id', $id)->first();
+        $keluarga = Keluarga::where('user_id', $id)->first();
+        $kontak = Kontak::where('user_id', $id)->first();
+        $kepegawaian = Kontak::where('user_id', $id)->first();
+        //dd($datapribadi ,$datapribadi->user, $datapribadi->user->roles);
 
-        return view('auth.profile', compact('user'));
+        return view('auth.profile', compact('datapribadi', 'kependudukan', 'keluarga', 'kontak', 'kepegawaian'));
     }
 
     /**
@@ -54,9 +60,22 @@ class DataPribadiController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateDataPribadiRequest $request, Request $dataPribadi)
+    public function update(Request $request, String $id)
     {
-        //
+        //dd($request->all());
+
+        $data = DataPribadi::where('id', $id)->first();
+
+        //dd($data);
+        foreach ($request->all() as $k => $v) {
+            if (Schema::hasColumn('data_pribadis', $k)) {
+                $data->$k = $v ?? '-';
+            }
+        }
+
+        $data->save();
+
+        return redirect()->back();
     }
 
     /**

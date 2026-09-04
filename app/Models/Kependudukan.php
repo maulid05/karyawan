@@ -2,11 +2,22 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Kependudukan extends Model
 {
-    /** @use HasFactory<\Database\Factories\KependudukanFactory> */
-    use HasFactory;
+    protected $table = 'kependudukans';
+
+    protected $fillable = [
+        'user_id',
+        'NIK',
+        'Agama',
+        'Kewarganegaraan',
+    ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 }

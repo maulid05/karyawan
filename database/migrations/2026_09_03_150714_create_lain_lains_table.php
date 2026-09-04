@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('lain_lains', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->String('NPWP')->nullable();
+            $table->String('Nama_Wajib_Pajak')->nullable();
+            $table->String('Sinta_Id')->nullable();
+            $table->String('Sinta_Link')->nullable();
             $table->timestamps();
         });
     }

@@ -11,12 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('kependudukans', function (Blueprint $table) {
+        Schema::create('timelines', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->String('NIK')->nullable();
-            $table->String('Agama')->nullable();
-            $table->String('Kewarganegaraan')->nullable();
+            $table->String('log')->nullable();
             $table->timestamps();
         });
     }
@@ -26,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('kependudukans');
+        Schema::dropIfExists('timelines');
     }
 };

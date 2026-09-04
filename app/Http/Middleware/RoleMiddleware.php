@@ -13,21 +13,28 @@ class RoleMiddleware
         Closure $next,
         ...$roles
     ): Response {
-
-    //dd($roles);
-
         $user = $request->user();
-
-        //dd($user, $next, $request)
 
         if (!$user) {
             abort(401);
         }
 
         if (!$user->hasRoles($roles)) {
-            abort(403, 'Anda tidak memiliki akses.');
-        }
 
+            if ($user->hasRoles(['superadmin'])) {
+                return redirect()->route('home');
+            }
+
+            if ($user->hasRoles(['admin'])) {
+                return redirect()->route('dashboard');
+            }
+
+            if ($user->hasRoles(['client'])) {
+                return redirect()->route('homepage');
+            }
+
+            abort(403);
+        }
         return $next($request);
     }
 }
