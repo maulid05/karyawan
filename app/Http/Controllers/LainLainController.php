@@ -3,64 +3,26 @@
 namespace App\Http\Controllers;
 
 use App\Models\LainLain;
-use App\Http\Requests\StoreLainLainRequest;
-use App\Http\Requests\UpdateLainLainRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class LainLainController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function update(Request $request, string $id)
     {
-        //
-    }
+        $lainLain = LainLain::where('id', $id)
+            ->firstOrFail();
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+        foreach ($request->all() as $key => $value) {
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreLainLainRequest $request)
-    {
-        //
-    }
+            if (Schema::hasColumn('lain_lains', $key)) {
+                $lainLain->$key = $value ?: '-';
+            }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(LainLain $lainLain)
-    {
-        //
-    }
+        }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(LainLain $lainLain)
-    {
-        //
-    }
+        $lainLain->save();
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateLainLainRequest $request, LainLain $lainLain)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(LainLain $lainLain)
-    {
-        //
+        return redirect()->back();
     }
 }

@@ -7,9 +7,12 @@ use App\Http\Controllers\{
     ClientController,
     AuthController,
     DataPribadiController,
+    KepegawaianController,
     KependudukanController,
     KeluargaController,
-    KontakController
+    KontakController,
+    ProfilAkademikController,
+    LainLain
 };
 
 Route::get('/', function () {
@@ -71,4 +74,14 @@ Route::middleware('auth')->group(function () {
         KepegawaianController::class,
         'update'
     ])->name('kepegawaian.update');
+
+    Route::patch('profil-akademik/update/{id}', [
+        ProfilAkademikController::class,
+        'update'
+    ])->name('profil-akademik.update');
+
+    Route::patch('lain-lain/update/{id}', [
+        LainLainController::class,
+        'update'
+    ])->name('lain-lain.update');
 });

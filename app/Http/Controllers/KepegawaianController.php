@@ -10,15 +10,18 @@ class KepegawaianController extends Controller
 {
     public function update(Request $request, string $id)
     {
-        $kepegawaian = Kepegawaian::where('id', $id)->firstOrFail();
+        $Kepegawaian = Kepegawaian::where('id', $id)
+            ->firstOrFail();
 
         foreach ($request->all() as $key => $value) {
+
             if (Schema::hasColumn('kepegawaians', $key)) {
-                $kepegawaian->$key = $value ?: '-';
+                $Kepegawaian->$key = $value ?: '-';
             }
+
         }
 
-        $kepegawaian->save();
+        $Kepegawaian->save();
 
         return redirect()->back();
     }

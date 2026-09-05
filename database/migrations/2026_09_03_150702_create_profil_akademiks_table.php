@@ -21,6 +21,12 @@ return new class extends Migration
             $table->String('Scopus_Id')->nullable();
             $table->String('Scopus_Link')->nullable();
             $table->String('Scopus_H_Index')->nullable();
+            $table->String('Google_Scholar_Id')->nullable();
+            $table->String('Google_Scholar_Link')->nullable();
+            $table->String('Google_Scholar_H_Index')->nullable();
+            $table->String('Orchid_Id')->nullable();
+            $table->String('Orchid_Link')->nullable();
+            $table->String('Repository_Universitas')->nullable();
             $table->timestamps();
         });
     }

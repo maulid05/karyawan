@@ -70,4 +70,14 @@ class User extends Authenticatable
     {
         return $this->hasOne(Kepegawaian::class);
     }
+    
+    public function profilAkademik()
+    {
+        return $this->hasOne(ProfilAkademik::class);
+    }
+
+    public function lainLain()
+    {
+        return $this->hasOne(LainLain::class);
+    }
 }

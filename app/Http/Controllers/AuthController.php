@@ -12,7 +12,7 @@ use App\Models\{
     Keluarga,
     LainLain,
     PasFoto,
-    ProfilAkademik
+    ProfilAkademik,
 };
 use Illuminate\Support\Facades\Auth;
 
@@ -90,6 +90,30 @@ class AuthController extends Controller
                 'Tanggal_Masuk' => '-',
                 'Sumber_Gaji' => '-',
                 'Nama_Jabatan' => '-',
+            ]);
+
+            ProfilAkademik::create([
+                'user_id' => Auth::id(),
+                'Rumpun_Ilmu' => '-',
+                'Pohon_Ilmu' => '-',
+                'Kelompok_Ilmu' => '-',
+                'Cabang_Ilmu' => '-',
+                'Scopus_Id' => '-',
+                'Scopus_Link' => '-',
+                'Scopus_H_Index' => '-',
+                'Google_Schoolar_Id' => '-',
+                'Google_Schoolar_Link' => '-',
+                'Google_Schoolar_H_Index' => '-',
+                'Orchid_Id' => '-',
+                'Orchid_Link' => '-',
+                'Repository_Universitas' => '-',
+            ]);
+            LainLain::create([
+                'user_id' => Auth::id(),
+                'NPWP' => '-',
+                'Nama_Wajib_Pajak' => '-',
+                'Sinta_Id' => '-',
+                'Sinta_Link' => '-',
             ]);
         }
 

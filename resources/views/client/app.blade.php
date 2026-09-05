@@ -27,14 +27,19 @@
 
     <style>
 
-        body, #nav{
-            background-color:blanchedalmond ;
+        body {
+            background-color: blanchedalmond;
         }
+
+        /* =========================
+           SIDEBAR
+        ========================= */
 
         .sidebar {
             width: 250px;
             min-height: 100vh;
             background-color: #198754;
+            flex-shrink: 0;
         }
 
         .sidebar .nav-link {
@@ -49,23 +54,92 @@
             color: #fff;
         }
 
-        .main-content {
-            min-height: 100vh;
-        }
-
         .logo {
             max-width: 180px;
         }
 
-        @media (max-width: 767px) {
+        .main-content {
+            min-height: 100vh;
+        }
+
+        /* Tombol hamburger */
+        .hamburger {
+            display: none;
+            border: none;
+            font-size: 25px;
+            background: transparent;
+        }
+
+        /* Tombol close */
+        .close-sidebar {
+            display: none;
+            border: none;
+            background: transparent;
+            color: white;
+            font-size: 28px;
+        }
+
+
+        /* =========================
+           MOBILE / TABLET
+           < 950px
+        ========================= */
+
+        @media (max-width: 949px) {
 
             .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
                 width: 100%;
+                height: auto;
                 min-height: auto;
+
+                transform: translateY(-100%);
+                transition: transform .3s ease;
+
+                z-index: 1050;
+            }
+
+            .sidebar.show {
+                transform: translateY(0);
+            }
+
+            .hamburger {
+                display: block;
+            }
+
+            .close-sidebar {
+                display: block;
+            }
+
+            .sidebar-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .sidebar .nav {
+                margin-top: 10px;
             }
 
             .main-content {
-                min-height: auto;
+                width: 100%;
+                min-height: 100vh;
+            }
+
+        }
+
+
+        /* =========================
+           DESKTOP
+           >= 950px
+        ========================= */
+
+        @media (min-width: 950px) {
+
+            .sidebar-header {
+                display: block;
             }
 
         }
@@ -79,31 +153,45 @@
 
 <body>
 
-<div class="d-flex flex-column flex-md-row">
+<div class="d-flex">
 
 
     {{-- =========================
          SIDEBAR
     ========================== --}}
 
-    <aside class="sidebar p-3">
+    <aside id="sidebar" class="sidebar p-3">
 
-        {{-- Logo --}}
-        <div class="text-center mb-4">
+        <div class="sidebar-header">
 
-            <img
-                src="https://unibamadura.ac.id/page/images/logo_unibamadura.png"
-                class="img-fluid logo"
-                alt="UNIBA MADURA"
+            <div class="text-center">
+
+                <img
+                    src="https://unibamadura.ac.id/page/images/logo_unibamadura.png"
+                    class="img-fluid logo"
+                    alt="UNIBA MADURA"
+                >
+
+            </div>
+
+            {{-- Tombol Close --}}
+            <button
+                type="button"
+                class="close-sidebar"
+                onclick="closeSidebar()"
             >
+                &times;
+            </button>
 
         </div>
 
+
         {{-- Menu --}}
+
         <nav class="nav flex-column">
 
             <a
-                href="{{ url('/home') }}"
+                href="#"
                 class="nav-link active"
             >
                 Dashboard
@@ -150,19 +238,42 @@
     <main class="main-content flex-grow-1">
 
 
-        {{-- Navbar --}}
-        <nav id="nav" class="navbar navbar-light px-4">
+        {{-- =========================
+             NAVBAR
+        ========================== --}}
 
-            <div>
+        <nav
+            id="nav"
+            class="navbar px-4"
+        >
+
+            <div class="d-flex align-items-center gap-3">
+
+                {{-- Hamburger --}}
+                <button
+                    id="hamburger"
+                    class="hamburger"
+                    type="button"
+                    onclick="openSidebar()"
+                >
+                    ☰
+                </button>
+
 
                 <h5 class="mb-0 fw-bold">
+
                     @yield('title', 'Dashboard')
+
                 </h5>
 
             </div>
 
 
-            {{-- User --}}
+
+            {{-- =========================
+                 USER
+            ========================== --}}
+
             @auth
 
                 <div class="dropdown">
@@ -177,20 +288,30 @@
 
                     </button>
 
-                    <ul class="dropdown-menu dropdown-menu-end" style="background-color: blanchedalmond">
+
+                    <ul
+                        class="dropdown-menu dropdown-menu-end"
+                        style="background-color: blanchedalmond"
+                    >
 
                         <li>
+
                             <a
                                 class="dropdown-item"
-                                href="#"
+                                href="{{ route('cek', Auth::user()->id) }}"
                             >
                                 Profile
                             </a>
+
                         </li>
 
+
                         <li>
+
                             <hr class="dropdown-divider">
+
                         </li>
+
 
                         <li>
 
@@ -221,7 +342,11 @@
         </nav>
 
 
-        {{-- Page Content --}}
+
+        {{-- =========================
+             PAGE CONTENT
+        ========================== --}}
+
         <div class="container-fluid p-4">
 
             @yield('content')
@@ -233,13 +358,39 @@
 </div>
 
 
+
 {{-- Bootstrap JS --}}
+
 <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js">
 </script>
+
+
+<script>
+
+    function openSidebar() {
+
+        document
+            .getElementById('sidebar')
+            .classList.add('show');
+
+    }
+
+
+    function closeSidebar() {
+
+        document
+            .getElementById('sidebar')
+            .classList.remove('show');
+
+    }
+
+</script>
+
 
 @yield('js')
 
 </body>
 
 </html>
+

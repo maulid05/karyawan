@@ -24,4 +24,9 @@ class User_Role extends Model
     {
         return $this->belongsTo(Role::class, 'role_id');
     }
+    
+    public function profilAkademik()
+    {
+        return $this->hasOne(ProfilAkademik::class);
+    }
 }

@@ -3,64 +3,68 @@
 namespace App\Http\Controllers;
 
 use App\Models\ProfilAkademik;
-use App\Http\Requests\StoreProfilAkademikRequest;
-use App\Http\Requests\UpdateProfilAkademikRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ProfilAkademikController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menampilkan profil akademik.
      */
     public function index()
     {
-        //
+        $profilAkademik = ProfilAkademik::firstOrCreate(
+            ['user_id' => Auth::id()]
+        );
+
+        return view('profil-akademik.index', compact('profilAkademik'));
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Menampilkan form edit.
      */
-    public function create()
+    public function edit()
     {
-        //
+        $profilAkademik = ProfilAkademik::firstOrCreate(
+            ['user_id' => Auth::id()]
+        );
+
+        return view('profil-akademik.edit', compact('profilAkademik'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyimpan perubahan profil akademik.
      */
-    public function store(StoreProfilAkademikRequest $request)
+    public function update(Request $request)
     {
-        //
-    }
+        $validated = $request->validate([
+            'rumpun_ilmu' => 'nullable|string|max:255',
+            'pohon_ilmu' => 'nullable|string|max:255',
+            'kelompok_ilmu' => 'nullable|string|max:255',
+            'cabang_ilmu' => 'nullable|string|max:255',
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(ProfilAkademik $profilAkademik)
-    {
-        //
-    }
+            'scopus_id' => 'nullable|string|max:255',
+            'scopus_link' => 'nullable|url|max:255',
+            'scopus_h_index' => 'nullable|integer|min:0',
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(ProfilAkademik $profilAkademik)
-    {
-        //
-    }
+            'google_scholar_id' => 'nullable|string|max:255',
+            'google_scholar_link' => 'nullable|url|max:255',
+            'google_scholar_h_index' => 'nullable|integer|min:0',
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateProfilAkademikRequest $request, ProfilAkademik $profilAkademik)
-    {
-        //
-    }
+            'orcid_id' => 'nullable|string|max:255',
+            'orcid_link' => 'nullable|url|max:255',
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(ProfilAkademik $profilAkademik)
-    {
-        //
+            'repository_universitas' => 'nullable|url|max:255',
+        ]);
+
+        $profilAkademik = ProfilAkademik::firstOrCreate(
+            ['user_id' => Auth::id()]
+        );
+
+        $profilAkademik->update($validated);
+
+        return redirect()
+            ->route('profil-akademik.index')
+            ->with('success', 'Profil akademik berhasil diperbarui.');
     }
 }
