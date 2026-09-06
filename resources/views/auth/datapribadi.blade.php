@@ -12,15 +12,82 @@
     <div class="text-center p-4">
 
         <div
-            class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center"
-            style="width: 100px; height: 100px; font-size: 36px;"
+            class="mx-auto"
+            style="
+                width: 130px;
+                height: 160px;
+                overflow: hidden;
+                border-radius: 16px;
+                background: #ffffff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            "
         >
-            {{ strtoupper(substr($datapribadi->user->name, 0, 1)) }}
+
+            @if ($pasFoto && $pasFoto->Foto && $pasFoto->Foto !== '-')
+
+                <img
+                    src="{{ asset('storage/' . $pasFoto->Foto) }}"
+                    alt="Pas Foto"
+                    style="
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                    "
+                >
+
+            @else
+
+                <div
+                    class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                    style="
+                        width: 100px;
+                        height: 100px;
+                        font-size: 36px;
+                    "
+                >
+                    {{ strtoupper(substr($datapribadi->user->name, 0, 1)) }}
+                </div>
+
+            @endif
+
         </div>
 
-        <h5 class="mt-3 mb-0 fw-semibold">
+        <h5 class="mt-3 mb-3 fw-semibold">
             {{ $datapribadi->user->name }}
         </h5>
+
+        <form
+            action="{{ route('pas-foto.update', ['id' => $pasFoto->id]) }}"
+            method="POST"
+            enctype="multipart/form-data"
+        >
+
+            @csrf
+            @method('PATCH')
+
+            <div class="d-flex justify-content-center">
+
+                <label
+                    for="Foto"
+                    class="btn btn-primary px-4"
+                >
+                    Edit Foto
+                </label>
+
+                <input
+                    type="file"
+                    id="Foto"
+                    name="Foto"
+                    class="d-none"
+                    accept=".jpg,.jpeg,.png,.webp"
+                    onchange="this.form.submit()"
+                >
+
+            </div>
+
+        </form>
 
     </div>
 

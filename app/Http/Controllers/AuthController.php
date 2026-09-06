@@ -12,7 +12,7 @@ use App\Models\{
     Keluarga,
     LainLain,
     PasFoto,
-    ProfilAkademik,
+    ProfilAkademik, 
 };
 use Illuminate\Support\Facades\Auth;
 
@@ -114,6 +114,10 @@ class AuthController extends Controller
                 'Nama_Wajib_Pajak' => '-',
                 'Sinta_Id' => '-',
                 'Sinta_Link' => '-',
+            ]);
+            PasFoto::create([
+                'user_id' => Auth::id(),
+                'Foto' => '-',
             ]);
         }
 

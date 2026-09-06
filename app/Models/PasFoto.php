@@ -2,11 +2,20 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PasFoto extends Model
 {
-    /** @use HasFactory<\Database\Factories\PasFotoFactory> */
-    use HasFactory;
+    protected $table = 'pas_fotos';
+
+    protected $fillable = [
+        'user_id',
+        'Foto',
+    ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 }

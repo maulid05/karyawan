@@ -3,64 +3,45 @@
 namespace App\Http\Controllers;
 
 use App\Models\PasFoto;
-use App\Http\Requests\StorePasFotoRequest;
-use App\Http\Requests\UpdatePasFotoRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class PasFotoController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function update(Request $request, string $id)
     {
-        //
-    }
+        //dd($request->all());
+        $pasFoto = PasFoto::where('id', $id)
+            ->first();
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+        $request->validate([
+            'Foto' => [
+                'nullable',
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:2048',
+            ],
+        ], [
+            'Foto.image' => 'File harus berupa gambar.',
+            'Foto.mimes' => 'Format foto harus JPG, JPEG, PNG, atau WEBP.',
+            'Foto.max' => 'Ukuran foto maksimal 2 MB.',
+        ]);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StorePasFotoRequest $request)
-    {
-        //
-    }
+        if ($request->hasFile('Foto')) {
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(PasFoto $pasFoto)
-    {
-        //
-    }
+            if (
+                $pasFoto->Foto &&
+                Storage::disk('public')->exists($pasFoto->Foto)
+            ) {
+                Storage::disk('public')->delete($pasFoto->Foto);
+            }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(PasFoto $pasFoto)
-    {
-        //
-    }
+            $pasFoto->Foto = $request->file('Foto')
+                ->store('pas-foto', 'public');
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdatePasFotoRequest $request, PasFoto $pasFoto)
-    {
-        //
-    }
+        $pasFoto->save();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(PasFoto $pasFoto)
-    {
-        //
+        return redirect()->back();
     }
 }

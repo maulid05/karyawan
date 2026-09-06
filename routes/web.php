@@ -12,7 +12,8 @@ use App\Http\Controllers\{
     KeluargaController,
     KontakController,
     ProfilAkademikController,
-    LainLain
+    LainLainController,
+    PasFotoController
 };
 
 Route::get('/', function () {
@@ -84,4 +85,13 @@ Route::middleware('auth')->group(function () {
         LainLainController::class,
         'update'
     ])->name('lain-lain.update');
+
+    Route::middleware('auth')->group(function () {
+
+    Route::patch('pas-foto/update/{id}', [
+            PasFotoController::class,
+            'update'
+        ])->name('pas-foto.update');
+
+    });
 });

@@ -1,7 +1,7 @@
 <?php
     namespace App\Http\Controllers;
 
-    use App\Models\{DataPribadi, Kependudukan, Keluarga, Kontak, ProfilAkademik, Kepegawaian, LainLain};
+    use App\Models\{DataPribadi, Kependudukan, Keluarga, Kontak, ProfilAkademik, Kepegawaian, LainLain, PasFoto};
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\Schema;
 
@@ -45,9 +45,10 @@
             $kepegawaian = Kepegawaian::where('user_id', $id)->first();
             $profilAkademik = ProfilAkademik::where('user_id', $id)->first();
             $lainLain = LainLain::where('user_id', $id)->first();
+            $pasFoto = PasFoto::where('user_id', $id)->first();
             //dd($datapribadi ,$datapribadi->user, $datapribadi->user->roles);
 
-            return view('auth.profile', compact('datapribadi', 'kependudukan', 'keluarga', 'kontak', 'kepegawaian', 'profilAkademik', 'lainLain'));
+            return view('auth.profile', compact('datapribadi', 'kependudukan', 'keluarga', 'kontak', 'kepegawaian', 'profilAkademik', 'lainLain', 'pasFoto'));
         }
 
         /**

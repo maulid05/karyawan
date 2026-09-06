@@ -80,4 +80,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(LainLain::class);
     }
+
+    public function pasFoto()
+    {
+        return $this->hasOne(PasFoto::class);
+    }
 }
