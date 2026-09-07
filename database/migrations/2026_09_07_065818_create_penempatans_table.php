@@ -14,7 +14,15 @@ return new class extends Migration
         Schema::create('penempatans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->String('Jabantan_Fungsional')->nullable();
+            $table->String('Status')->nullable();
+            $table->String('Ikatan_Kerja')->nullable();
+            $table->String('Jenjang_Pendidikan')->nullable();
+            $table->String('Perguruan_Tinggi')->nullable();
+            $table->String('Unit')->nullable();
+            $table->String('Taggal_Mulai')->nullable();
+            $table->String('Taggal_Mulai')->nullable();
+            $table->String('Taggal_Surat_Terbit')->nullable();
+            $table->String('Penugasan')->nullable();
             $table->timestamps();
         });
     }
