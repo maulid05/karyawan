@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('riwayat_pekerjaans', function (Blueprint $table) {
+        Schema::create('jabatan_fungsionals', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->String('Nama_Pekerjaan')->nullable();
-            $table->String('Rincian_Pekerjaan')->nullable();
-            $table->String('Waktu')->nullable();
-            $table->String('LN_atau_DN')->nullable();
+            $table->String('Jabantan_Fungsional')->nullable();
+            $table->String('No_SK')->nullable();
+            $table->String('Tanggal_Masuk')->nullable();
+            $table->String('Status_Pegawai')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('riwayat_pekerjaans');
+        Schema::dropIfExists('jabatan_fungsionals');
     }
 };

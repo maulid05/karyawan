@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('riwayat_pekerjaans', function (Blueprint $table) {
+        Schema::create('impassing_dan_kepangkatans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->String('Nama_Pekerjaan')->nullable();
-            $table->String('Rincian_Pekerjaan')->nullable();
-            $table->String('Waktu')->nullable();
-            $table->String('LN_atau_DN')->nullable();
+            $table->String('Pangkat_atau_Golongan')->nullable();
+            $table->String('No_SK')->nullable();
+            $table->String('Tanggal_SK')->nullable();
+            $table->String('Tanggal_Mulai')->nullable();    
             $table->timestamps();
         });
     }
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('riwayat_pekerjaans');
+        Schema::dropIfExists('impassing_dan_kepangkatans');
     }
 };
