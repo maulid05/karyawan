@@ -121,6 +121,6 @@ class AuthController extends Controller
             ]);
         }
 
-        return redirect()->route('profile', Auth::user()->id);
+        return redirect()->route('profile', Auth::user()->id)->with('tittle', 'Profile');
     }
 }

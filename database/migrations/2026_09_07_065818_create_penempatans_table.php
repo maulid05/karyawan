@@ -20,7 +20,6 @@ return new class extends Migration
             $table->String('Perguruan_Tinggi')->nullable();
             $table->String('Unit')->nullable();
             $table->String('Taggal_Mulai')->nullable();
-            $table->String('Taggal_Mulai')->nullable();
             $table->String('Taggal_Surat_Terbit')->nullable();
             $table->String('Penugasan')->nullable();
             $table->timestamps();

@@ -3,64 +3,98 @@
 namespace App\Http\Controllers;
 
 use App\Models\JabatanFungsional;
-use App\Http\Requests\StoreJabatanFungsionalRequest;
-use App\Http\Requests\UpdateJabatanFungsionalRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class JabatanFungsionalController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menampilkan data jabatan fungsional
+     * milik user yang sedang login.
      */
     public function index()
     {
-        //
+        $data = JabatanFungsional::where('user_id', Auth::id())
+            ->latest()
+            ->get();
+
+        return view('jabatan_fungsional.index', compact('data'));
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Menampilkan form tambah data.
      */
     public function create()
     {
-        //
+        return view('jabatan_fungsional.create');
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyimpan data jabatan fungsional.
      */
-    public function store(StoreJabatanFungsionalRequest $request)
+    public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'Jabantan_Fungsional' => 'nullable|string|max:255',
+            'No_SK'               => 'nullable|string|max:255',
+            'Tanggal_Masuk'       => 'nullable|string|max:255',
+            'Status_Pegawai'      => 'nullable|string|max:255',
+        ]);
+
+        $validated['user_id'] = Auth::id();
+
+        JabatanFungsional::create($validated);
+
+        return redirect()
+            ->route('jabatan-fungsional.index')
+            ->with('success', 'Data jabatan fungsional berhasil ditambahkan.');
     }
 
     /**
-     * Display the specified resource.
+     * Menampilkan form edit.
      */
-    public function show(JabatanFungsional $jabatanFungsional)
+    public function edit($id)
     {
-        //
+        $data = JabatanFungsional::where('user_id', Auth::id())
+            ->findOrFail($id);
+
+        return view('jabatan_fungsional.edit', compact('data'));
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Mengupdate data jabatan fungsional.
      */
-    public function edit(JabatanFungsional $jabatanFungsional)
+    public function update(Request $request, $id)
     {
-        //
+        $data = JabatanFungsional::where('user_id', Auth::id())
+            ->findOrFail($id);
+
+        $validated = $request->validate([
+            'Jabantan_Fungsional' => 'nullable|string|max:255',
+            'No_SK'               => 'nullable|string|max:255',
+            'Tanggal_Masuk'       => 'nullable|string|max:255',
+            'Status_Pegawai'      => 'nullable|string|max:255',
+        ]);
+
+        $data->update($validated);
+
+        return redirect()
+            ->route('jabatan-fungsional.index')
+            ->with('success', 'Data jabatan fungsional berhasil diperbarui.');
     }
 
     /**
-     * Update the specified resource in storage.
+     * Menghapus data jabatan fungsional.
      */
-    public function update(UpdateJabatanFungsionalRequest $request, JabatanFungsional $jabatanFungsional)
+    public function destroy($id)
     {
-        //
-    }
+        $data = JabatanFungsional::where('user_id', Auth::id())
+            ->findOrFail($id);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(JabatanFungsional $jabatanFungsional)
-    {
-        //
+        $data->delete();
+
+        return redirect()
+            ->route('jabatan-fungsional.index')
+            ->with('success', 'Data jabatan fungsional berhasil dihapus.');
     }
 }

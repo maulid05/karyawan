@@ -1,6 +1,7 @@
-@extends('auth.layout')
+@extends('layouts.layout')
+@section('title', 'Profile')
 
-@section('content')
+@section('content' )
 
 <style>
     .profile-tabs-wrapper {

@@ -85,4 +85,15 @@ class User extends Authenticatable
     {
         return $this->hasOne(PasFoto::class);
     }
+
+    public function jabatanStruktural()
+    {
+        return $this->hasMany(JabatanStruktural::class);
+    }
+
+    public function jabatanFungsional()
+    {
+        return $this->hasMany(JabatanFungsional::class);
+    }
+
 }

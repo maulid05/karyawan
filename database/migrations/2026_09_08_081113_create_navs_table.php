@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('diklats', function (Blueprint $table) {
+        Schema::create('navs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->String('Nama_Diklat')->nullable();
-            $table->String('Jenis_Diklat')->nullable();
+            $table->foreignId('jabatan_struktural_id')->constrained('jabatan_strukturals')->onDelete('cascade');
+            $table->string('Nama')->nullable();
+            $table->string('Controller')->nullable();
+            $table->string('Method')->nullable();
             $table->timestamps();
         });
     }
@@ -25,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('diklats');
+        Schema::dropIfExists('navs');
     }
 };

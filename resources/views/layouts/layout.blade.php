@@ -19,11 +19,14 @@
         @yield('title', 'SIMAK UNIBA')
     </title>
 
+
     {{-- Bootstrap --}}
+
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
         rel="stylesheet"
     >
+
 
     <style>
 
@@ -31,9 +34,10 @@
             background-color: blanchedalmond;
         }
 
+
         /* =========================
            SIDEBAR
-        ========================= */
+        ========================== */
 
         .sidebar {
             width: 250px;
@@ -42,11 +46,13 @@
             flex-shrink: 0;
         }
 
+
         .sidebar .nav-link {
             color: rgba(255, 255, 255, .85);
             border-radius: 8px;
             margin-bottom: 5px;
         }
+
 
         .sidebar .nav-link:hover,
         .sidebar .nav-link.active {
@@ -54,15 +60,21 @@
             color: #fff;
         }
 
+
         .logo {
             max-width: 180px;
         }
+
 
         .main-content {
             min-height: 100vh;
         }
 
-        /* Tombol hamburger */
+
+        /* =========================
+           HAMBURGER
+        ========================== */
+
         .hamburger {
             display: none;
             border: none;
@@ -70,7 +82,11 @@
             background: transparent;
         }
 
-        /* Tombol close */
+
+        /* =========================
+           CLOSE SIDEBAR
+        ========================== */
+
         .close-sidebar {
             display: none;
             border: none;
@@ -82,8 +98,7 @@
 
         /* =========================
            MOBILE / TABLET
-           < 950px
-        ========================= */
+        ========================== */
 
         @media (max-width: 949px) {
 
@@ -91,6 +106,7 @@
                 position: fixed;
                 top: 0;
                 left: 0;
+
                 width: 100%;
                 height: auto;
                 min-height: auto;
@@ -101,17 +117,21 @@
                 z-index: 1050;
             }
 
+
             .sidebar.show {
                 transform: translateY(0);
             }
+
 
             .hamburger {
                 display: block;
             }
 
+
             .close-sidebar {
                 display: block;
             }
+
 
             .sidebar-header {
                 display: flex;
@@ -119,9 +139,11 @@
                 justify-content: space-between;
             }
 
+
             .sidebar .nav {
                 margin-top: 10px;
             }
+
 
             .main-content {
                 width: 100%;
@@ -133,8 +155,7 @@
 
         /* =========================
            DESKTOP
-           >= 950px
-        ========================= */
+        ========================== */
 
         @media (min-width: 950px) {
 
@@ -146,6 +167,7 @@
 
     </style>
 
+
     @yield('css')
 
 </head>
@@ -156,11 +178,14 @@
 <div class="d-flex">
 
 
-    {{-- =========================
+    {{-- =====================================================
          SIDEBAR
-    ========================== --}}
+    ====================================================== --}}
 
-    <aside id="sidebar" class="sidebar p-3">
+    <aside
+        id="sidebar"
+        class="sidebar p-3"
+    >
 
         <div class="sidebar-header">
 
@@ -174,7 +199,7 @@
 
             </div>
 
-            {{-- Tombol Close --}}
+
             <button
                 type="button"
                 class="close-sidebar"
@@ -186,61 +211,52 @@
         </div>
 
 
-        {{-- Menu --}}
+        {{-- =================================================
+             MENU
+        ================================================== --}}
 
         <nav class="nav flex-column">
 
+
+            {{-- Dashboard --}}
+
             <a
-                href="#"
-                class="nav-link active"
+                href="{{ route('home') }}"
+                class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}"
             >
                 Dashboard
             </a>
 
-            <a
-                href="#"
-                class="nav-link"
-            >
-                Data Master
-            </a>
+
+            {{-- Jabatan Struktural --}}
 
             <a
-                href="#"
-                class="nav-link"
+                href="{{ pageUrl('JabatanStrukturalController') }}"
+                class="nav-link
+                {{ isset($currentController) &&
+                   $currentController === 'JabatanStrukturalController'
+                   ? 'active'
+                   : '' }}"
             >
-                Pengguna
+                Jabatan Struktural
             </a>
 
-            <a
-                href="#"
-                class="nav-link"
-            >
-                Laporan
-            </a>
-
-            <a
-                href="#"
-                class="nav-link"
-            >
-                Pengaturan
-            </a>
 
         </nav>
 
     </aside>
 
 
-
-    {{-- =========================
+    {{-- =====================================================
          MAIN
-    ========================== --}}
+    ====================================================== --}}
 
     <main class="main-content flex-grow-1">
 
 
-        {{-- =========================
+        {{-- =================================================
              NAVBAR
-        ========================== --}}
+        ================================================== --}}
 
         <nav
             id="nav"
@@ -249,7 +265,9 @@
 
             <div class="d-flex align-items-center gap-3">
 
+
                 {{-- Hamburger --}}
+
                 <button
                     id="hamburger"
                     class="hamburger"
@@ -260,6 +278,8 @@
                 </button>
 
 
+                {{-- Title --}}
+
                 <h5 class="mb-0 fw-bold">
 
                     @yield('title', 'Dashboard')
@@ -269,10 +289,9 @@
             </div>
 
 
-
-            {{-- =========================
+            {{-- =================================================
                  USER
-            ========================== --}}
+            ================================================== --}}
 
             @auth
 
@@ -342,10 +361,9 @@
         </nav>
 
 
-
-        {{-- =========================
-             PAGE CONTENT
-        ========================== --}}
+        {{-- =====================================================
+             CONTENT
+        ====================================================== --}}
 
         <div class="container-fluid p-4">
 
@@ -353,10 +371,10 @@
 
         </div>
 
+
     </main>
 
 </div>
-
 
 
 {{-- Bootstrap JS --}}
@@ -393,4 +411,3 @@
 </body>
 
 </html>
-

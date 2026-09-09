@@ -2,11 +2,24 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class JabatanStruktural extends Model
 {
-    /** @use HasFactory<\Database\Factories\JabatanStrukturalFactory> */
-    use HasFactory;
+    protected $table = 'jabatan_strukturals';
+
+    protected $fillable = [
+        'user_id',
+        'Nama_Jabatan',
+        'Nomor_SK',
+        'Tanggal_Mulai_Terbit',
+        'Sumber_Gaji',
+        'Status',
+    ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 }

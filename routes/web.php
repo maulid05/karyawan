@@ -13,7 +13,9 @@ use App\Http\Controllers\{
     KontakController,
     ProfilAkademikController,
     LainLainController,
-    PasFotoController
+    PasFotoController,
+    JabatanStrukturalController,
+    PageController
 };
 
 Route::get('/', function () {
@@ -86,12 +88,20 @@ Route::middleware('auth')->group(function () {
         'update'
     ])->name('lain-lain.update');
 
-    Route::middleware('auth')->group(function () {
-
     Route::patch('pas-foto/update/{id}', [
-            PasFotoController::class,
-            'update'
-        ])->name('pas-foto.update');
+        PasFotoController::class,
+        'update'
+    ])->name('pas-foto.update');
 
-    });
+    Route::get(
+        '/',
+        [PageController::class, 'index']
+    )->name('home');
+
+    Route::match(
+        ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+        '/page',
+        [PageController::class, 'page']
+    )->name('page');
+
 });

@@ -3,64 +3,193 @@
 namespace App\Http\Controllers;
 
 use App\Models\JabatanStruktural;
-use App\Http\Requests\StoreJabatanStrukturalRequest;
-use App\Http\Requests\UpdateJabatanStrukturalRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class JabatanStrukturalController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Mengambil semua kolom tabel secara otomatis.
+     */
+    private function columns()
+    {
+        return Schema::getColumnListing(
+            (new JabatanStruktural)->getTable()
+        );
+    }
+
+
+    /**
+     * Menampilkan daftar jabatan struktural
+     * milik user yang sedang login.
      */
     public function index()
     {
-        //
+        $data = JabatanStruktural::where(
+            'user_id',
+            Auth::id()
+        )
+        ->latest()
+        ->get();
+
+        return view('client.page.index', [
+            'title' => 'Jabatan Struktural',
+            'data' => $data,
+            'columns' => $this->columns(),
+        ]);
     }
 
+
     /**
-     * Show the form for creating a new resource.
+     * Form tambah data.
      */
     public function create()
     {
-        //
+        return view('client.page.create', [
+            'title' => 'Tambah Jabatan Struktural',
+            'columns' => $this->columns(),
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreJabatanStrukturalRequest $request)
-    {
-        //
-    }
 
     /**
-     * Display the specified resource.
+     * Menyimpan data baru.
      */
-    public function show(JabatanStruktural $jabatanStruktural)
+    public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'Nama_Jabatan' => 'nullable|string|max:255',
+            'Nomor_SK' => 'nullable|string|max:255',
+            'Tanggal_Mulai_Terbit' => 'nullable|string|max:255',
+            'Sumber_Gaji' => 'nullable|string|max:255',
+            'Status' => 'nullable|string|max:255',
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Data otomatis milik user yang sedang login
+        |--------------------------------------------------------------------------
+        */
+
+        $validated['user_id'] = Auth::id();
+
+
+        JabatanStruktural::create($validated);
+
+
+        return redirect()
+            ->to(pageUrl('JabatanStrukturalController'))
+            ->with(
+                'success',
+                'Data jabatan struktural berhasil ditambahkan.'
+            );
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(JabatanStruktural $jabatanStruktural)
-    {
-        //
-    }
 
     /**
-     * Update the specified resource in storage.
+     * Menampilkan detail data.
+     *
+     * ID berasal dari PageController setelah decrypt.
      */
-    public function update(UpdateJabatanStrukturalRequest $request, JabatanStruktural $jabatanStruktural)
+    public function show($id)
     {
-        //
+        $jabatanStruktural = JabatanStruktural::where(
+            'user_id',
+            Auth::id()
+        )
+        ->findOrFail($id);
+
+
+        return view('client.page.show', [
+            'title' => 'Detail Jabatan Struktural',
+            'data' => $jabatanStruktural,
+            'columns' => $this->columns(),
+        ]);
     }
 
+
     /**
-     * Remove the specified resource from storage.
+     * Form edit data.
+     *
+     * ID berasal dari PageController setelah decrypt.
      */
-    public function destroy(JabatanStruktural $jabatanStruktural)
+    public function edit($id)
     {
-        //
+        $jabatanStruktural = JabatanStruktural::where(
+            'user_id',
+            Auth::id()
+        )
+        ->findOrFail($id);
+
+
+        return view('client.page.edit', [
+            'title' => 'Edit Jabatan Struktural',
+            'data' => $jabatanStruktural,
+            'columns' => $this->columns(),
+        ]);
+    }
+
+
+    /**
+     * Memperbarui data.
+     *
+     * ID berasal dari PageController setelah decrypt.
+     */
+    public function update(
+        Request $request,
+        $id
+    ) {
+        $jabatanStruktural = JabatanStruktural::where(
+            'user_id',
+            Auth::id()
+        )
+        ->findOrFail($id);
+
+
+        $validated = $request->validate([
+            'Nama_Jabatan' => 'nullable|string|max:255',
+            'Nomor_SK' => 'nullable|string|max:255',
+            'Tanggal_Mulai_Terbit' => 'nullable|string|max:255',
+            'Sumber_Gaji' => 'nullable|string|max:255',
+            'Status' => 'nullable|string|max:255',
+        ]);
+
+
+        $jabatanStruktural->update($validated);
+
+
+        return redirect()
+            ->to(pageUrl('JabatanStrukturalController'))
+            ->with(
+                'success',
+                'Data jabatan struktural berhasil diperbarui.'
+            );
+    }
+
+
+    /**
+     * Menghapus data.
+     *
+     * ID berasal dari PageController setelah decrypt.
+     */
+    public function destroy($id)
+    {
+        $jabatanStruktural = JabatanStruktural::where(
+            'user_id',
+            Auth::id()
+        )
+        ->findOrFail($id);
+
+
+        $jabatanStruktural->delete();
+
+
+        return redirect()
+            ->to(pageUrl('JabatanStrukturalController'))
+            ->with(
+                'success',
+                'Data jabatan struktural berhasil dihapus.'
+            );
     }
 }
