@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\JabatanStruktural;
+use App\Models\{JabatanStruktural, MasterUnit, MasterJabatan};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
@@ -47,8 +47,22 @@ class JabatanStrukturalController extends Controller
     public function create()
     {
         return view('client.page.create', [
-            'title' => 'Tambah Jabatan Struktural',
+            'title' => 'Tambah ' . class_basename($this),
             'columns' => $this->columns(),
+
+            'masterJabatans' => MasterJabatan::where(
+                'Status',
+                'Aktif'
+            )
+            ->orderBy('Nama_Jabatan')
+            ->get(),
+
+            'masterUnits' => MasterUnit::where(
+                'Status',
+                'Aktif'
+            )
+            ->orderBy('Nama_Unit')
+            ->get(),
         ]);
     }
 

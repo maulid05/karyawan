@@ -53,6 +53,27 @@
 
                     $lower = strtolower($column);
 
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Field khusus
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $isJabatan =
+                        $column === 'Nama_Jabatan';
+
+                    $isUnit =
+                        $column === 'Unit';
+
+                    $isStatus =
+                        $column === 'Status';
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Deteksi tipe input otomatis
+                    |--------------------------------------------------------------------------
+                    */
 
                     if (
                         str_contains($lower, 'keterangan') ||
@@ -107,7 +128,10 @@
                 <div class="mb-3">
 
 
-                    <label class="form-label fw-semibold">
+                    {{-- Label --}}
+                    <label
+                        class="form-label fw-semibold"
+                    >
 
                         {{ ucwords(
                             str_replace(
@@ -120,13 +144,138 @@
                     </label>
 
 
-                    @if($type === 'textarea')
+                    {{-- ========================================================= --}}
+                    {{-- STATUS --}}
+                    {{-- ========================================================= --}}
+
+                    @if($isStatus)
+
+                        <select
+                            name="{{ $column }}"
+                            class="form-select
+                                @error($column)
+                                    is-invalid
+                                @enderror"
+                        >
+
+                            <option value="">
+                                -- Pilih Status --
+                            </option>
+
+                            <option
+                                value="Aktif"
+                                {{ old($column) === 'Aktif'
+                                    ? 'selected'
+                                    : '' }}
+                            >
+                                Aktif
+                            </option>
+
+                            <option
+                                value="Tidak Aktif"
+                                {{ old($column) === 'Tidak Aktif'
+                                    ? 'selected'
+                                    : '' }}
+                            >
+                                Tidak Aktif
+                            </option>
+
+                        </select>
+
+
+                    {{-- ========================================================= --}}
+                    {{-- MASTER JABATAN --}}
+                    {{-- ========================================================= --}}
+
+                    @elseif($isJabatan)
+
+                        <select
+                            name="{{ $column }}"
+                            class="form-select
+                                @error($column)
+                                    is-invalid
+                                @enderror"
+                        >
+
+                            <option value="">
+                                -- Pilih Jabatan --
+                            </option>
+
+
+                            @foreach($masterJabatans ?? [] as $jabatan)
+
+                                <option
+                                    value="{{ $jabatan->Nama_Jabatan }}"
+                                    {{ old($column) === $jabatan->Nama_Jabatan
+                                        ? 'selected'
+                                        : '' }}
+                                >
+
+                                    {{ $jabatan->Nama_Jabatan }}
+
+                                </option>
+
+                            @endforeach
+
+                        </select>
+
+
+                    {{-- ========================================================= --}}
+                    {{-- MASTER UNIT --}}
+                    {{-- ========================================================= --}}
+
+                    @elseif($isUnit)
+
+                        <select
+                            name="{{ $column }}"
+                            class="form-select
+                                @error($column)
+                                    is-invalid
+                                @enderror"
+                        >
+
+                            <option value="">
+                                -- Pilih Unit --
+                            </option>
+
+
+                            @foreach($masterUnits ?? [] as $unit)
+
+                                <option
+                                    value="{{ $unit->Nama_Unit }}"
+                                    {{ old($column) === $unit->Nama_Unit
+                                        ? 'selected'
+                                        : '' }}
+                                >
+
+                                    {{ $unit->Nama_Unit }}
+
+                                </option>
+
+                            @endforeach
+
+                        </select>
+
+
+                    {{-- ========================================================= --}}
+                    {{-- TEXTAREA --}}
+                    {{-- ========================================================= --}}
+
+                    @elseif($type === 'textarea')
 
                         <textarea
                             name="{{ $column }}"
-                            class="form-control"
+                            class="form-control
+                                @error($column)
+                                    is-invalid
+                                @enderror"
                             rows="4"
                         >{{ old($column) }}</textarea>
+
+
+                    {{-- ========================================================= --}}
+                    {{-- INPUT BIASA --}}
+                    {{-- ========================================================= --}}
 
                     @else
 
@@ -134,16 +283,22 @@
                             type="{{ $type }}"
                             name="{{ $column }}"
                             value="{{ old($column) }}"
-                            class="form-control"
+                            class="form-control
+                                @error($column)
+                                    is-invalid
+                                @enderror"
                         >
 
                     @endif
 
 
+                    {{-- Validation Error --}}
                     @error($column)
 
                         <div class="text-danger small mt-1">
+
                             {{ $message }}
+
                         </div>
 
                     @enderror
@@ -154,6 +309,10 @@
             @endforeach
 
 
+            {{-- ========================================================= --}}
+            {{-- BUTTON --}}
+            {{-- ========================================================= --}}
+
             <div class="d-flex gap-2 mt-4">
 
 
@@ -161,7 +320,9 @@
                     type="submit"
                     class="btn btn-success"
                 >
+
                     Simpan
+
                 </button>
 
 
@@ -171,7 +332,9 @@
                     ) }}"
                     class="btn btn-secondary"
                 >
+
                     Kembali
+
                 </a>
 
 

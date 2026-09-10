@@ -13,12 +13,10 @@ class ClientController extends Controller
      */
     public function index()
     {
-        $user =  User::where('id', Auth::id())->with('roles')->first();
-
-        $role = $user->roles;
+        $jabatanStruktural = Auth::user()->jabatanStruktural;
         // dd($user);
 
-        return view('client.index', compact('user', 'role'  ));
+        return view('client.index', compact( 'jabatanStruktural' ));
     }
 
     /**

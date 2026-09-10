@@ -96,4 +96,9 @@ class User extends Authenticatable
         return $this->hasMany(JabatanFungsional::class);
     }
 
+    public function impassingDanKepangkatan()
+    {
+        return $this->hasMany(ImpassingDanKepangkatan::class);
+    }
+
 }

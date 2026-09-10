@@ -5,20 +5,38 @@ namespace App\Http\Controllers;
 use App\Models\JabatanFungsional;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class JabatanFungsionalController extends Controller
 {
+    /**
+     * Mengambil daftar kolom tabel.
+     */
+    private function columns()
+    {
+        return Schema::getColumnListing(
+            (new JabatanFungsional)->getTable()
+        );
+    }
+
     /**
      * Menampilkan data jabatan fungsional
      * milik user yang sedang login.
      */
     public function index()
     {
-        $data = JabatanFungsional::where('user_id', Auth::id())
-            ->latest()
-            ->get();
+        $data = JabatanFungsional::where(
+            'user_id',
+            Auth::id()
+        )
+        ->latest()
+        ->get();
 
-        return view('jabatan_fungsional.index', compact('data'));
+        return view('client.page.index', [
+            'title' => 'Jabatan Fungsional',
+            'data' => $data,
+            'columns' => $this->columns(),
+        ]);
     }
 
     /**
@@ -26,7 +44,10 @@ class JabatanFungsionalController extends Controller
      */
     public function create()
     {
-        return view('jabatan_fungsional.create');
+        return view('client.page.create', [
+            'title' => 'Tambah Jabatan Fungsional',
+            'columns' => $this->columns(),
+        ]);
     }
 
     /**
@@ -46,8 +67,29 @@ class JabatanFungsionalController extends Controller
         JabatanFungsional::create($validated);
 
         return redirect()
-            ->route('jabatan-fungsional.index')
-            ->with('success', 'Data jabatan fungsional berhasil ditambahkan.');
+            ->to(pageUrl('JabatanFungsionalController'))
+            ->with(
+                'success',
+                'Data jabatan fungsional berhasil ditambahkan.'
+            );
+    }
+
+    /**
+     * Menampilkan detail data.
+     */
+    public function show($id)
+    {
+        $data = JabatanFungsional::where(
+            'user_id',
+            Auth::id()
+        )
+        ->findOrFail($id);
+
+        return view('client.page.show', [
+            'title' => 'Detail Jabatan Fungsional',
+            'data' => $data,
+            'columns' => $this->columns(),
+        ]);
     }
 
     /**
@@ -55,10 +97,17 @@ class JabatanFungsionalController extends Controller
      */
     public function edit($id)
     {
-        $data = JabatanFungsional::where('user_id', Auth::id())
-            ->findOrFail($id);
+        $data = JabatanFungsional::where(
+            'user_id',
+            Auth::id()
+        )
+        ->findOrFail($id);
 
-        return view('jabatan_fungsional.edit', compact('data'));
+        return view('client.page.edit', [
+            'title' => 'Edit Jabatan Fungsional',
+            'data' => $data,
+            'columns' => $this->columns(),
+        ]);
     }
 
     /**
@@ -66,8 +115,11 @@ class JabatanFungsionalController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $data = JabatanFungsional::where('user_id', Auth::id())
-            ->findOrFail($id);
+        $data = JabatanFungsional::where(
+            'user_id',
+            Auth::id()
+        )
+        ->findOrFail($id);
 
         $validated = $request->validate([
             'Jabantan_Fungsional' => 'nullable|string|max:255',
@@ -79,8 +131,11 @@ class JabatanFungsionalController extends Controller
         $data->update($validated);
 
         return redirect()
-            ->route('jabatan-fungsional.index')
-            ->with('success', 'Data jabatan fungsional berhasil diperbarui.');
+            ->to(pageUrl('JabatanFungsionalController'))
+            ->with(
+                'success',
+                'Data jabatan fungsional berhasil diperbarui.'
+            );
     }
 
     /**
@@ -88,13 +143,19 @@ class JabatanFungsionalController extends Controller
      */
     public function destroy($id)
     {
-        $data = JabatanFungsional::where('user_id', Auth::id())
-            ->findOrFail($id);
+        $data = JabatanFungsional::where(
+            'user_id',
+            Auth::id()
+        )
+        ->findOrFail($id);
 
         $data->delete();
 
         return redirect()
-            ->route('jabatan-fungsional.index')
-            ->with('success', 'Data jabatan fungsional berhasil dihapus.');
+            ->to(pageUrl('JabatanFungsionalController'))
+            ->with(
+                'success',
+                'Data jabatan fungsional berhasil dihapus.'
+            );
     }
 }

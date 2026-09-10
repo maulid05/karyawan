@@ -14,7 +14,8 @@ use App\Http\Controllers\{
     ProfilAkademikController,
     LainLainController,
     PasFotoController,
-    JabatanStrukturalController,
+    MasterJabatanController,
+    MasterUnitController,
     PageController
 };
 
@@ -26,13 +27,17 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
     Route::get('index', [
         SuperAdminController::class,
         'index'
-    ])->name('home');
+    ])->name('superadmin');
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('dashboard', [
+        AdminController::class,
+        'index'
+    ])->name('dashboard');
+
+    Route::resource('master-jabatan', MasterJabatanController::class);
+    Route::resource('master-unit', MasterUnitController::class);
 });
 
 Route::middleware(['auth', 'role:client'])->group(function () {

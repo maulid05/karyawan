@@ -227,19 +227,70 @@
                 Dashboard
             </a>
 
+            @auth
+
+                @if(auth()->user()->roles->contains('name', 'admin'))
+
+                    <li class="nav-item">
+                        <a
+                            href="{{ pageUrl('MasterJabatanController') }}"
+                            class="nav-link"
+                        >
+                            Master Jabatan
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a
+                            href="{{ pageUrl('MasterUnitController') }}"
+                            class="nav-link"
+                        >
+                            Master Unit
+                        </a>
+                    </li>
+
+                @elseif (auth()->user()->roles->contains('name', 'client'))
+
+                    <a
+                        href="{{ pageUrl('JabatanStrukturalController') }}"
+                        class="nav-link
+                        {{ isset($currentController) &&
+                        $currentController === 'JabatanStrukturalController'
+                        ? 'active'
+                        : '' }}"
+                    >
+                        Jabatan Struktural
+                    </a>
+
+                    <a
+                        href="{{ pageUrl('RiwayatPendidikanFormalController') }}"
+                        class="nav-link
+                        {{ isset($currentController) &&
+                        $currentController === 'RiwayatPendidikanFormalController'
+                        ? 'active'
+                        : '' }}"
+                    >
+                        Riwayat Pendidikan Formal
+                    </a>
+
+                    <a
+                        href="{{ pageUrl('RiwayatPekerjaanController') }}"
+                        class="nav-link
+                        {{ isset($currentController) &&
+                        $currentController === 'RiwayatPekerjaanController'
+                        ? 'active'
+                        : '' }}"
+                    >
+                        Riwayat Pekerjaan
+                    </a>
+                    
+                @endif
+
+            @endauth
 
             {{-- Jabatan Struktural --}}
 
-            <a
-                href="{{ pageUrl('JabatanStrukturalController') }}"
-                class="nav-link
-                {{ isset($currentController) &&
-                   $currentController === 'JabatanStrukturalController'
-                   ? 'active'
-                   : '' }}"
-            >
-                Jabatan Struktural
-            </a>
+            
 
 
         </nav>

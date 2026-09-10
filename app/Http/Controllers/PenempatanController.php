@@ -3,64 +3,167 @@
 namespace App\Http\Controllers;
 
 use App\Models\Penempatan;
-use App\Http\Requests\StorePenempatanRequest;
-use App\Http\Requests\UpdatePenempatanRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class PenempatanController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Mengambil daftar kolom tabel.
+     */
+    private function columns()
+    {
+        return Schema::getColumnListing(
+            (new Penempatan)->getTable()
+        );
+    }
+
+    /**
+     * Menampilkan data penempatan
+     * milik user yang sedang login.
      */
     public function index()
     {
-        //
+        $data = Penempatan::where(
+            'user_id',
+            Auth::id()
+        )
+        ->latest()
+        ->get();
+
+        return view('client.page.index', [
+            'title' => 'Penempatan',
+            'data' => $data,
+            'columns' => $this->columns(),
+        ]);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Menampilkan form tambah data.
      */
     public function create()
     {
-        //
+        return view('client.page.create', [
+            'title' => 'Tambah Penempatan',
+            'columns' => $this->columns(),
+        ]);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyimpan data penempatan.
      */
-    public function store(StorePenempatanRequest $request)
+    public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'Status'               => 'nullable|string|max:255',
+            'Ikatan_Kerja'         => 'nullable|string|max:255',
+            'Jenjang_Pendidikan'   => 'nullable|string|max:255',
+            'Perguruan_Tinggi'     => 'nullable|string|max:255',
+            'Unit'                 => 'nullable|string|max:255',
+            'Taggal_Mulai'         => 'nullable|string|max:255',
+            'Taggal_Surat_Terbit'  => 'nullable|string|max:255',
+            'Penugasan'            => 'nullable|string|max:255',
+        ]);
+
+        $validated['user_id'] = Auth::id();
+
+        Penempatan::create($validated);
+
+        return redirect()
+            ->to(pageUrl('PenempatanController'))
+            ->with(
+                'success',
+                'Data penempatan berhasil ditambahkan.'
+            );
     }
 
     /**
-     * Display the specified resource.
+     * Menampilkan detail data.
      */
-    public function show(Penempatan $penempatan)
+    public function show($id)
     {
-        //
+        $data = Penempatan::where(
+            'user_id',
+            Auth::id()
+        )
+        ->findOrFail($id);
+
+        return view('client.page.show', [
+            'title' => 'Detail Penempatan',
+            'data' => $data,
+            'columns' => $this->columns(),
+        ]);
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Menampilkan form edit.
      */
-    public function edit(Penempatan $penempatan)
+    public function edit($id)
     {
-        //
+        $data = Penempatan::where(
+            'user_id',
+            Auth::id()
+        )
+        ->findOrFail($id);
+
+        return view('client.page.edit', [
+            'title' => 'Edit Penempatan',
+            'data' => $data,
+            'columns' => $this->columns(),
+        ]);
     }
 
     /**
-     * Update the specified resource in storage.
+     * Mengupdate data penempatan.
      */
-    public function update(UpdatePenempatanRequest $request, Penempatan $penempatan)
+    public function update(Request $request, $id)
     {
-        //
+        $data = Penempatan::where(
+            'user_id',
+            Auth::id()
+        )
+        ->findOrFail($id);
+
+        $validated = $request->validate([
+            'Status'               => 'nullable|string|max:255',
+            'Ikatan_Kerja'         => 'nullable|string|max:255',
+            'Jenjang_Pendidikan'   => 'nullable|string|max:255',
+            'Perguruan_Tinggi'     => 'nullable|string|max:255',
+            'Unit'                 => 'nullable|string|max:255',
+            'Taggal_Mulai'         => 'nullable|string|max:255',
+            'Taggal_Surat_Terbit'  => 'nullable|string|max:255',
+            'Penugasan'            => 'nullable|string|max:255',
+        ]);
+
+        $data->update($validated);
+
+        return redirect()
+            ->to(pageUrl('PenempatanController'))
+            ->with(
+                'success',
+                'Data penempatan berhasil diperbarui.'
+            );
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Menghapus data penempatan.
      */
-    public function destroy(Penempatan $penempatan)
+    public function destroy($id)
     {
-        //
+        $data = Penempatan::where(
+            'user_id',
+            Auth::id()
+        )
+        ->findOrFail($id);
+
+        $data->delete();
+
+        return redirect()
+            ->to(pageUrl('PenempatanController'))
+            ->with(
+                'success',
+                'Data penempatan berhasil dihapus.'
+            );
     }
 }

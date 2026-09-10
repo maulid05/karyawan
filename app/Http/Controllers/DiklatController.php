@@ -5,62 +5,150 @@ namespace App\Http\Controllers;
 use App\Models\Diklat;
 use App\Http\Requests\StoreDiklatRequest;
 use App\Http\Requests\UpdateDiklatRequest;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class DiklatController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Mengambil daftar kolom tabel.
+     */
+    private function columns()
+    {
+        return Schema::getColumnListing(
+            (new Diklat)->getTable()
+        );
+    }
+
+    /**
+     * Menampilkan data diklat
+     * milik user yang sedang login.
      */
     public function index()
     {
-        //
+        $data = Diklat::where(
+            'user_id',
+            Auth::id()
+        )
+        ->latest()
+        ->get();
+
+        return view('client.page.index', [
+            'title' => 'Diklat',
+            'data' => $data,
+            'columns' => $this->columns(),
+        ]);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Menampilkan form tambah data.
      */
     public function create()
     {
-        //
+        return view('client.page.create', [
+            'title' => 'Tambah Diklat',
+            'columns' => $this->columns(),
+        ]);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyimpan data diklat.
      */
     public function store(StoreDiklatRequest $request)
     {
-        //
+        $validated = $request->validated();
+
+        $validated['user_id'] = Auth::id();
+
+        Diklat::create($validated);
+
+        return redirect()
+            ->to(pageUrl('DiklatController'))
+            ->with(
+                'success',
+                'Data diklat berhasil ditambahkan.'
+            );
     }
 
     /**
-     * Display the specified resource.
+     * Menampilkan detail data.
      */
-    public function show(Diklat $diklat)
+    public function show($id)
     {
-        //
+        $data = Diklat::where(
+            'user_id',
+            Auth::id()
+        )
+        ->findOrFail($id);
+
+        return view('client.page.show', [
+            'title' => 'Detail Diklat',
+            'data' => $data,
+            'columns' => $this->columns(),
+        ]);
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Menampilkan form edit.
      */
-    public function edit(Diklat $diklat)
+    public function edit($id)
     {
-        //
+        $data = Diklat::where(
+            'user_id',
+            Auth::id()
+        )
+        ->findOrFail($id);
+
+        return view('client.page.edit', [
+            'title' => 'Edit Diklat',
+            'data' => $data,
+            'columns' => $this->columns(),
+        ]);
     }
 
     /**
-     * Update the specified resource in storage.
+     * Mengupdate data diklat.
      */
-    public function update(UpdateDiklatRequest $request, Diklat $diklat)
-    {
-        //
+    public function update(
+        UpdateDiklatRequest $request,
+        $id
+    ) {
+        $data = Diklat::where(
+            'user_id',
+            Auth::id()
+        )
+        ->findOrFail($id);
+
+        $data->update(
+            $request->validated()
+        );
+
+        return redirect()
+            ->to(pageUrl('DiklatController'))
+            ->with(
+                'success',
+                'Data diklat berhasil diperbarui.'
+            );
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Menghapus data diklat.
      */
-    public function destroy(Diklat $diklat)
+    public function destroy($id)
     {
-        //
+        $data = Diklat::where(
+            'user_id',
+            Auth::id()
+        )
+        ->findOrFail($id);
+
+        $data->delete();
+
+        return redirect()
+            ->to(pageUrl('DiklatController'))
+            ->with(
+                'success',
+                'Data diklat berhasil dihapus.'
+            );
     }
 }
