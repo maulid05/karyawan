@@ -16,7 +16,9 @@ use App\Http\Controllers\{
     PasFotoController,
     MasterJabatanController,
     MasterUnitController,
-    PageController
+    PageController,
+    ContextController,
+    NavController,
 };
 
 Route::get('/', function () {
@@ -109,4 +111,13 @@ Route::middleware('auth')->group(function () {
         [PageController::class, 'page']
     )->name('page');
 
+    Route::get('/context/{id}', [
+        ContextController::class,
+        'activate'
+    ])->name('context.activate');
+    
+    Route::get('/context/clear', [
+        ContextController::class,
+        'clear'
+    ])->name('context.clear');
 });

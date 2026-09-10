@@ -228,8 +228,27 @@
             </a>
 
             @auth
+                @if (auth()->user()->roles->contains('name', 'superadmin'))
 
-                @if(auth()->user()->roles->contains('name', 'admin'))
+                    <li class="nav-item">
+                        <a
+                            href="{{ pageUrl('NavController') }}"
+                            class="nav-link"
+                        >
+                            Nav Manager
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a
+                            href="{{ pageUrl('MasterJabatanController') }}"
+                            class="nav-link"
+                        >
+                            Master Jabatan
+                        </a>
+                    </li>
+                    
+                @elseif(auth()->user()->roles->contains('name', 'admin'))
 
                     <li class="nav-item">
                         <a
@@ -261,6 +280,21 @@
                     >
                         Jabatan Struktural
                     </a>
+
+                    @php
+                        $navs = \App\Facades\Context::navs();
+                    @endphp
+
+                    @foreach ($navs as $nav)
+
+                        <a href="{{ pageUrl($nav->Controller, $nav->Method) }}"
+                        class="nav-link">
+
+                            {{ $nav->Nama }}
+
+                        </a>
+
+                    @endforeach
 
                     <a
                         href="{{ pageUrl('RiwayatPendidikanFormalController') }}"
@@ -335,6 +369,11 @@
 
                     @yield('title', 'Dashboard')
 
+                    :
+
+                    {{ \App\Facades\Context::active()?->Nama_Jabatan }}
+
+
                 </h5>
 
             </div>
@@ -347,6 +386,7 @@
             @auth
 
                 <div class="dropdown">
+
 
                     <button
                         class="btn dropdown-toggle"

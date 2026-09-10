@@ -1,23 +1,42 @@
 @extends('layouts.layout')
 
+@section('title', 'Masuk Sebagai')
+
 @section('content')
-<div class="card col-md-6 d-flex w-100 container bg-transparent border-0 gap-3 flex-column flex-md-row">
-    @foreach ($jabatanStruktural as $jab)
-     <div class="row bg-success text-white rounded p-3 m-3 flex-fill btn btn-success">
 
-            <div class="text-center">
-                <h5>
-                    Masuk Sebagai
-                </h5>
+<div class="container">
 
-                <a href="" class="fw-bold nav-link" style="color:white;">
-                    {{ $jab->Nama_Jabatan }}
+    <div class="row g-3">
+
+        @foreach ($jabatan as $item)
+
+            <div class="col-md-6">
+
+                <a href="{{ route('context.activate', $item->id) }}"
+                   class="text-decoration-none">
+
+                    <div class="card border-0 shadow-sm bg-success text-white">
+                        <div class="card-body text-center">
+
+                            <h5 class="fw-bold mb-2">
+                                Masuk Sebagai
+                            </h5>
+
+                            <h4 class="mb-0">
+                                {{ $item->Nama_Jabatan }}
+                            </h4>
+
+                        </div>
+                    </div>
+
                 </a>
 
             </div>
 
-        </div>
+        @endforeach
 
-    @endforeach
+    </div>
+
 </div>
+
 @endsection

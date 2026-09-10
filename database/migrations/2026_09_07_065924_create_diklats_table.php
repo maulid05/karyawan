@@ -16,6 +16,9 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->String('Nama_Diklat')->nullable();
             $table->String('Jenis_Diklat')->nullable();
+            $table->String('Penyelenggara')->nullable();
+            $table->String('Tahun')->nullable();
+            $table->String('Status')->nullable();
             $table->timestamps();
         });
     }

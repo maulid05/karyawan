@@ -13,10 +13,10 @@ class ClientController extends Controller
      */
     public function index()
     {
-        $jabatanStruktural = Auth::user()->jabatanStruktural;
+        $jabatan = Auth::user()->jabatanStruktural;
         // dd($user);
 
-        return view('client.index', compact( 'jabatanStruktural' ));
+        return view('client.index', compact( 'jabatan' ));
     }
 
     /**

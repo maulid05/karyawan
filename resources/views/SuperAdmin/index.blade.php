@@ -1,4 +1,4 @@
-@extends('SuperAdmin.app')
+@extends('layouts.layout')
 @section('content')
 <div class="card col-md-6 d-flex w-100 container bg-transparent border-0 gap-3 flex-column flex-md-row">
     @foreach ($data as $key => $datas)
