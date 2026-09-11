@@ -19,6 +19,7 @@ use App\Http\Controllers\{
     PageController,
     ContextController,
     NavController,
+    TimelineController
 };
 
 Route::get('/', function () {
@@ -120,4 +121,19 @@ Route::middleware('auth')->group(function () {
         ContextController::class,
         'clear'
     ])->name('context.clear');
+
+    Route::get('/timeline', [TimelineController::class, 'index'])
+        ->name('timeline.index');
+
+    Route::get('/timeline/{id}', [TimelineController::class, 'show'])
+        ->name('timeline.show');
+
+    Route::post('/timeline/{id}/decision/{decision}', [TimelineController::class, 'decision'])
+        ->name('timeline.decision');
+
+    Route::patch('/timeline/read-all', [TimelineController::class, 'readAll'])
+        ->name('timeline.readAll');
+
+    Route::patch('/timeline/{id}/read', [TimelineController::class, 'read'])
+        ->name('timeline.read');
 });

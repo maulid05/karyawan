@@ -101,4 +101,9 @@ class User extends Authenticatable
         return $this->hasMany(ImpassingDanKepangkatan::class);
     }
 
+    public function timeline()
+    {
+        return $this->hasMany(Timeline::class);
+    }
+
 }

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('timelines', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->String('log')->nullable();
+            $table->json('log')->nullable();
             $table->timestamps();
         });
     }

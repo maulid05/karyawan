@@ -21,7 +21,6 @@
 
 
     {{-- Bootstrap --}}
-
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
         rel="stylesheet"
@@ -97,6 +96,77 @@
 
 
         /* =========================
+           NOTIFICATION
+        ========================== */
+
+        .notification-button {
+            border: none;
+            background: transparent;
+            font-size: 21px;
+            padding: 6px 10px;
+            position: relative;
+        }
+
+
+        .notification-button:hover {
+            background-color: rgba(0, 0, 0, .05);
+            border-radius: 8px;
+        }
+
+
+        .notification-menu {
+            width: 360px;
+            max-height: 500px;
+            overflow-y: auto;
+            background-color: blanchedalmond;
+        }
+
+
+        .notification-item {
+            white-space: normal;
+            border-bottom: 1px solid rgba(0, 0, 0, .08);
+        }
+
+
+        /*
+         * Notifikasi belum dibaca
+         */
+        .notification-item.unread {
+            background-color: rgba(255, 255, 255, .55);
+        }
+
+
+        /*
+         * Notifikasi sudah selesai
+         */
+        .notification-item.done {
+            background-color: transparent;
+            opacity: .75;
+        }
+
+
+        .notification-item:hover {
+            background-color: rgba(255, 255, 255, .75);
+            opacity: 1;
+        }
+
+
+        .notification-title {
+            font-size: 14px;
+        }
+
+
+        .notification-time {
+            font-size: 12px;
+        }
+
+
+        .notification-status {
+            font-size: 11px;
+        }
+
+
+        /* =========================
            MOBILE / TABLET
         ========================== */
 
@@ -150,6 +220,11 @@
                 min-height: 100vh;
             }
 
+
+            .notification-menu {
+                width: min(360px, calc(100vw - 30px));
+            }
+
         }
 
 
@@ -174,6 +249,7 @@
 
 
 <body>
+
 
 <div class="d-flex">
 
@@ -227,46 +303,67 @@
                 Dashboard
             </a>
 
+
             @auth
+
+
+                {{-- SUPERADMIN --}}
+
                 @if (auth()->user()->roles->contains('name', 'superadmin'))
 
                     <li class="nav-item">
+
                         <a
                             href="{{ pageUrl('NavController') }}"
                             class="nav-link"
                         >
                             Nav Manager
                         </a>
+
                     </li>
 
+
                     <li class="nav-item">
+
                         <a
                             href="{{ pageUrl('MasterJabatanController') }}"
                             class="nav-link"
                         >
                             Master Jabatan
                         </a>
+
                     </li>
-                    
+
+
+                {{-- ADMIN --}}
+
                 @elseif(auth()->user()->roles->contains('name', 'admin'))
 
                     <li class="nav-item">
+
                         <a
                             href="{{ pageUrl('MasterJabatanController') }}"
                             class="nav-link"
                         >
                             Master Jabatan
                         </a>
+
                     </li>
 
+
                     <li class="nav-item">
+
                         <a
                             href="{{ pageUrl('MasterUnitController') }}"
                             class="nav-link"
                         >
                             Master Unit
                         </a>
+
                     </li>
+
+
+                {{-- CLIENT --}}
 
                 @elseif (auth()->user()->roles->contains('name', 'client'))
 
@@ -281,20 +378,23 @@
                         Jabatan Struktural
                     </a>
 
+
                     @php
                         $navs = \App\Facades\Context::navs();
                     @endphp
 
+
                     @foreach ($navs as $nav)
 
-                        <a href="{{ pageUrl($nav->Controller, $nav->Method) }}"
-                        class="nav-link">
-
+                        <a
+                            href="{{ pageUrl($nav->Controller, $nav->Method) }}"
+                            class="nav-link"
+                        >
                             {{ $nav->Nama }}
-
                         </a>
 
                     @endforeach
+
 
                     <a
                         href="{{ pageUrl('RiwayatPendidikanFormalController') }}"
@@ -307,6 +407,7 @@
                         Riwayat Pendidikan Formal
                     </a>
 
+
                     <a
                         href="{{ pageUrl('RiwayatPekerjaanController') }}"
                         class="nav-link
@@ -317,19 +418,25 @@
                     >
                         Riwayat Pekerjaan
                     </a>
-                    
+
+                     <a
+                        href="{{ route('timeline.index') }}"
+                        class="nav-link {{ request()->routeIs('timeline.index') ? 'active' : '' }}"
+                    >
+                        Status
+                    </a>
+
+
                 @endif
 
+
             @endauth
-
-            {{-- Jabatan Struktural --}}
-
-            
 
 
         </nav>
 
     </aside>
+
 
 
     {{-- =====================================================
@@ -373,83 +480,371 @@
 
                     {{ \App\Facades\Context::active()?->Nama_Jabatan }}
 
-
                 </h5>
 
             </div>
 
 
+
             {{-- =================================================
-                 USER
+                 USER + NOTIFICATION
             ================================================== --}}
 
             @auth
 
-                <div class="dropdown">
+                <div class="d-flex align-items-center gap-2">
 
 
-                    <button
-                        class="btn dropdown-toggle"
-                        type="button"
-                        data-bs-toggle="dropdown"
-                    >
+                    {{-- =================================================
+                         NOTIFICATION
+                    ================================================== --}}
 
-                        {{ auth()->user()->name }}
+                    @php
 
-                    </button>
-
-
-                    <ul
-                        class="dropdown-menu dropdown-menu-end"
-                        style="background-color: blanchedalmond"
-                    >
-
-                        <li>
-
-                            <a
-                                class="dropdown-item"
-                                href="{{ route('cek', Auth::user()->id) }}"
-                            >
-                                Profile
-                            </a>
-
-                        </li>
+                        /*
+                         * Ambil timeline milik user yang sedang login.
+                         */
+                        $timelines = Auth::user()
+                            ->timeline()
+                            ->latest()
+                            ->take(10)
+                            ->get();
 
 
-                        <li>
+                        /*
+                         * Hitung hanya notifikasi yang
+                         * statusnya masih unread.
+                         */
+                        $unreadCount = Auth::user()
+                            ->timeline()
+                            ->where('log->status', 'unread')
+                            ->count();
 
-                            <hr class="dropdown-divider">
-
-                        </li>
+                    @endphp
 
 
-                        <li>
+                    <div class="dropdown">
 
-                            <form
-                                action="{{ route('logout') }}"
-                                method="POST"
-                            >
 
-                                @csrf
+                        {{-- Notification Button --}}
 
-                                <button
-                                    type="submit"
-                                    class="dropdown-item"
+                        <button
+                            class="notification-button"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            title="Notifikasi"
+                        >
+
+                            🔔
+
+
+                            {{-- Badge jumlah unread --}}
+
+                            @if($unreadCount > 0)
+
+                                <span
+                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                    style="font-size: 10px;"
                                 >
-                                    Logout
-                                </button>
+                                    {{ $unreadCount }}
+                                </span>
 
-                            </form>
+                            @endif
 
-                        </li>
+                        </button>
 
-                    </ul>
+
+
+                        {{-- Notification Menu --}}
+
+                        <ul
+                            class="dropdown-menu dropdown-menu-end p-0 notification-menu"
+                        >
+
+
+                            {{-- HEADER --}}
+
+                            <li class="px-3 py-3 border-bottom">
+
+                                <div
+                                    class="d-flex justify-content-between align-items-center"
+                                >
+
+                                    <strong>
+                                        Notifikasi
+                                    </strong>
+
+
+                                    @if($unreadCount > 0)
+
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-link text-decoration-none p-0"
+                                            onclick="readAllTimeline(event)"
+                                        >
+                                            Tandai semua selesai
+                                        </button>
+
+                                    @endif
+
+                                </div>
+
+                            </li>
+
+
+
+                            {{-- LIST NOTIFICATION --}}
+
+                            @forelse($timelines as $timeline)
+
+                                @php
+
+                                    $log = $timeline->log ?? [];
+
+
+                                    $status = $log['status'] ?? 'unread';
+
+
+                                    $action = $log['action'] ?? 'Aktivitas';
+
+
+                                    $type = $log['type'] ?? null;
+
+
+                                    $openedWith =
+                                        $log['opened_with']
+                                        ?? 'Tidak diketahui';
+
+
+                                    $decision =
+                                        $log['decision']
+                                        ?? null;
+
+                                @endphp
+
+
+                                <li>
+
+                                    {{--
+
+                                        PENTING:
+
+                                        Tidak menggunakan onclick
+                                        readTimeline() di sini.
+
+                                        Klik langsung menuju show.
+
+                                        show() akan mengubah:
+                                        unread -> done
+
+                                    --}}
+
+                                    <a
+                                        href="{{ route('timeline.show', $timeline->id) }}"
+                                        class="dropdown-item notification-item py-3
+                                        {{ $status === 'unread' ? 'unread' : 'done' }}"
+                                    >
+
+
+                                        {{-- Judul --}}
+
+                                        <div
+                                            class="notification-title fw-bold"
+                                        >
+
+                                            @if($type === 'decision')
+
+                                                @if($decision === 'approved')
+                                                    ✓ Keputusan Disetujui
+
+                                                @elseif($decision === 'rejected')
+                                                    ✕ Keputusan Ditolak
+
+                                                @elseif($decision === 'pending')
+                                                    ⏳ Keputusan Ditunda
+
+                                                @else
+                                                    Keputusan Admin
+                                                @endif
+
+                                            @else
+
+                                                {{ ucfirst($action) }}
+
+                                            @endif
+
+                                        </div>
+
+
+
+                                        {{-- Jenis data --}}
+
+                                        <div class="small text-muted">
+
+                                            {{ ucfirst(
+                                                str_replace(
+                                                    '_',
+                                                    ' ',
+                                                    $openedWith
+                                                )
+                                            ) }}
+
+                                        </div>
+
+
+
+                                        {{-- Status --}}
+
+                                        <div class="notification-status mt-1">
+
+                                            @if($status === 'unread')
+
+                                                <span class="text-success fw-bold">
+                                                    ● Belum dibaca
+                                                </span>
+
+                                            @else
+
+                                                <span class="text-muted">
+                                                    ✓ Selesai
+                                                </span>
+
+                                            @endif
+
+                                        </div>
+
+
+
+                                        {{-- Waktu --}}
+
+                                        <div class="notification-time text-muted mt-1">
+
+                                            {{ $timeline->created_at->diffForHumans() }}
+
+                                        </div>
+
+
+                                    </a>
+
+                                </li>
+
+
+                            @empty
+
+                                <li>
+
+                                    <div
+                                        class="text-center text-muted py-4"
+                                    >
+
+                                        🔕
+                                        <br>
+
+                                        Tidak ada notifikasi.
+
+                                    </div>
+
+                                </li>
+
+                            @endforelse
+
+
+
+                            {{-- FOOTER --}}
+
+                            <li class="border-top">
+
+                                <a
+                                    href="{{ route('timeline.index') }}"
+                                    class="dropdown-item text-center py-3"
+                                >
+                                    Lihat semua notifikasi
+                                </a>
+
+                            </li>
+
+
+                        </ul>
+
+                    </div>
+
+
+
+                    {{-- =================================================
+                         USER
+                    ================================================== --}}
+
+                    <div class="dropdown">
+
+
+                        <button
+                            class="btn dropdown-toggle"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                        >
+
+                            {{ auth()->user()->name }}
+
+                        </button>
+
+
+                        <ul
+                            class="dropdown-menu dropdown-menu-end"
+                            style="background-color: blanchedalmond"
+                        >
+
+                            <li>
+
+                                <a
+                                    class="dropdown-item"
+                                    href="{{ route('cek', Auth::user()->id) }}"
+                                >
+                                    Profile
+                                </a>
+
+                            </li>
+
+
+                            <li>
+
+                                <hr class="dropdown-divider">
+
+                            </li>
+
+
+                            <li>
+
+                                <form
+                                    action="{{ route('logout') }}"
+                                    method="POST"
+                                >
+
+                                    @csrf
+
+                                    <button
+                                        type="submit"
+                                        class="dropdown-item"
+                                    >
+                                        Logout
+                                    </button>
+
+                                </form>
+
+                            </li>
+
+                        </ul>
+
+                    </div>
+
 
                 </div>
 
             @endauth
 
+
         </nav>
+
 
 
         {{-- =====================================================
@@ -468,36 +863,115 @@
 </div>
 
 
-{{-- Bootstrap JS --}}
+
+{{-- =====================================================
+     BOOTSTRAP JS
+====================================================== --}}
 
 <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js">
 </script>
 
 
+
 <script>
 
-    function openSidebar() {
 
+    /* =================================================
+       SIDEBAR
+    ================================================== */
+
+    function openSidebar()
+    {
         document
             .getElementById('sidebar')
-            .classList.add('show');
-
+            .classList
+            .add('show');
     }
 
 
-    function closeSidebar() {
-
+    function closeSidebar()
+    {
         document
             .getElementById('sidebar')
-            .classList.remove('show');
+            .classList
+            .remove('show');
+    }
+
+
+
+    /* =================================================
+       READ ALL TIMELINE
+    ================================================== */
+
+    function readAllTimeline(event)
+    {
+
+        /*
+         * Jangan membuka dropdown setelah tombol diklik.
+         */
+        event.preventDefault();
+
+        event.stopPropagation();
+
+
+        fetch('/timeline/read-all', {
+
+            method: 'PATCH',
+
+            headers: {
+
+                'X-CSRF-TOKEN':
+                    document
+                    .querySelector(
+                        'meta[name="csrf-token"]'
+                    )
+                    .getAttribute('content'),
+
+                'Accept': 'application/json',
+
+            }
+
+        })
+
+        .then(response => {
+
+            if (!response.ok) {
+
+                throw new Error(
+                    'Gagal menyelesaikan semua notifikasi.'
+                );
+
+            }
+
+            return response.json();
+
+        })
+
+        .then(data => {
+
+            if (data.success) {
+
+                location.reload();
+
+            }
+
+        })
+
+        .catch(error => {
+
+            console.error(error);
+
+        });
 
     }
+
 
 </script>
 
 
 @yield('js')
+
 
 </body>
 

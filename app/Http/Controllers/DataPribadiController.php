@@ -1,10 +1,11 @@
 <?php
     namespace App\Http\Controllers;
 
-    use App\Models\{DataPribadi, Kependudukan, Keluarga, Kontak, ProfilAkademik, Kepegawaian, LainLain, PasFoto};
+    use App\Models\{Timeline, DataPribadi, Kependudukan, Keluarga, Kontak, ProfilAkademik, Kepegawaian, LainLain, PasFoto};
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\Schema;
-
+    use Illuminate\Support\Facades\Auth;
+    
     class DataPribadiController extends Controller
     {
         /**
@@ -46,9 +47,10 @@
             $profilAkademik = ProfilAkademik::where('user_id', $id)->first();
             $lainLain = LainLain::where('user_id', $id)->first();
             $pasFoto = PasFoto::where('user_id', $id)->first();
+            $timeline = TImeline::where('user_id', $id)->first();
             //dd($datapribadi ,$datapribadi->user, $datapribadi->user->roles);
 
-            return view('auth.profile', compact('datapribadi', 'kependudukan', 'keluarga', 'kontak', 'kepegawaian', 'profilAkademik', 'lainLain', 'pasFoto'));
+            return view('auth.profile', compact('datapribadi', 'kependudukan', 'keluarga', 'kontak', 'kepegawaian', 'profilAkademik', 'lainLain', 'pasFoto', 'timeline'));
         }
 
         /**
@@ -64,7 +66,7 @@
          */
         public function update(Request $request, String $id)
         {
-            //dd($request->all());
+            //dd($request->all(), $id, Auth::user()->id);
 
             $data = DataPribadi::where('id', $id)->first();
 
@@ -76,7 +78,7 @@
             }
 
             $data->save();
-
+            
             return redirect()->back();
         }
 
@@ -86,5 +88,5 @@
         public function destroy(Request $dataPribadi)
         {
             //
-        }
+        }   
     }
