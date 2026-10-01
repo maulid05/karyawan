@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Auth;
 
 class TimelineObserver
 {
+    /**
+     * Event ketika model dibuat.
+     */
     public function created(Model $model): void
     {
         $this->createTimeline(
@@ -17,17 +20,96 @@ class TimelineObserver
         );
     }
 
+    /**
+     * Event ketika model diperbarui.
+     *
+     * Alurnya:
+     *
+     * 1. Ambil data lama.
+     * 2. Ambil data baru.
+     * 3. Simpan Timeline untuk admin.
+     * 4. Kembalikan database ke data lama.
+     */
     public function updated(Model $model): void
     {
-        $changes = $model->getDirty();
+        /*
+         * Data sebelum perubahan.
+         */
+        $oldData = $model->getOriginal();
 
+        /*
+         * Data yang benar-benar berubah.
+         */
+        $newData = $model->getChanges();
+
+        /*
+         * Field sistem yang tidak perlu
+         * masuk approval.
+         */
+        $ignoredFields = [
+            'id',
+            'user_id',
+            'created_at',
+            'updated_at',
+        ];
+
+        /*
+         * Buang field sistem.
+         */
+        $newData = collect($newData)
+            ->except($ignoredFields)
+            ->toArray();
+
+        /*
+         * Tidak ada perubahan yang perlu
+         * mendapatkan approval.
+         */
+        if (empty($newData)) {
+            return;
+        }
+
+        /*
+         * Ambil data lama hanya untuk field
+         * yang berubah.
+         */
+        $oldData = collect($oldData)
+            ->only(array_keys($newData))
+            ->toArray();
+
+        /*
+         * Buat Timeline approval.
+         */
         $this->createTimeline(
             model: $model,
             action: 'update',
-            changes: $changes
+            changes: $newData,
+            original: $oldData
+        );
+
+        /*
+         * Kembalikan database ke data lama.
+         *
+         * Query langsung digunakan agar tidak
+         * menjalankan event Eloquent lagi.
+         */
+        $model->newQuery()
+            ->whereKey($model->getKey())
+            ->update($oldData);
+
+        /*
+         * Sinkronkan instance model dengan database.
+         */
+        $model->setRawAttributes(
+            array_merge(
+                $model->getAttributes(),
+                $oldData
+            )
         );
     }
 
+    /**
+     * Event ketika model dihapus.
+     */
     public function deleted(Model $model): void
     {
         $this->createTimeline(
@@ -36,33 +118,51 @@ class TimelineObserver
         );
     }
 
+    /**
+     * Membuat Timeline.
+     */
     private function createTimeline(
         Model $model,
         string $action,
-        array $changes = []
+        array $changes = [],
+        array $original = []
     ): void {
+
+        /*
+         * Timeline sendiri tidak boleh
+         * membuat Timeline.
+         */
         if ($model instanceof Timeline) {
             return;
         }
 
         /*
-         * ID DataPribadi pengirim.
+         * User yang sedang login.
          */
-        $senderId = Auth::user()->dataPribadi?->id;
+        $user = Auth::user();
+
+        if (!$user) {
+            return;
+        }
+
+        /*
+         * DataPribadi user yang melakukan perubahan.
+         */
+        $senderId = $user->dataPribadi?->id;
 
         if (!$senderId) {
             return;
         }
 
         /*
-         * CREATE
+         * Untuk CREATE, ambil seluruh data model.
          */
         if ($action === 'create') {
             $changes = $model->toArray();
         }
 
         /*
-         * Bersihkan field sistem dari changes.
+         * Buang field sistem.
          */
         $changes = collect($changes)
             ->except([
@@ -83,40 +183,62 @@ class TimelineObserver
             })
             ->toArray();
 
+        /*
+         * Tidak ada data perubahan.
+         */
         if (empty($changes)) {
             return;
         }
 
         /*
-         * Ambil semua admin sebagai tujuan.
+         * Bersihkan data lama.
+         */
+        $original = collect($original)
+            ->except([
+                'id',
+                'user_id',
+                'created_at',
+                'updated_at',
+            ])
+            ->toArray();
+
+        /*
+         * Ambil semua admin.
          */
         $admins = User::whereHas('roles', function ($query) {
             $query->where('name', 'admin');
         })->get();
 
+        /*
+         * URL halaman data.
+         */
         $pageUrl = $this->pageUrl($model);
 
+        /*
+         * Kirim Timeline ke semua admin.
+         */
         foreach ($admins as $admin) {
 
             Timeline::create([
                 /*
-                 * Tujuan / penerima.
+                 * Timeline milik admin.
                  */
                 'user_id' => $admin->id,
 
                 'log' => [
+
                     /*
                      * Jenis Timeline.
                      */
                     'type' => 'data_update',
 
                     /*
-                     * create / update / delete.
+                     * create / update / delete
                      */
                     'action' => $action,
 
                     /*
-                     * Status notifikasi.
+                     * Notifikasi baru.
                      */
                     'status' => 'unread',
 
@@ -131,20 +253,46 @@ class TimelineObserver
                     'opened_with' => $this->openedWith($model),
 
                     /*
-                     * Pengirim.
-                     * ID DataPribadi user yang sedang login.
+                     * ID DataPribadi pengirim.
                      */
                     'send_id' => $senderId,
 
                     /*
-                     * URL halaman tujuan.
+                     * URL data.
                      */
                     'pageUrl' => $pageUrl,
 
                     /*
-                     * Data perubahan.
+                     * Data untuk proses approval.
                      */
                     'data' => [
+
+                        /*
+                         * Class model.
+                         *
+                         * Contoh:
+                         * App\Models\DataPribadi
+                         */
+                        'model' => get_class($model),
+
+                        /*
+                         * ID record.
+                         */
+                        'model_id' => $model->getKey(),
+
+                        /*
+                         * Data sebelum perubahan.
+                         */
+                        'old_data' => $original,
+
+                        /*
+                         * Data setelah perubahan.
+                         */
+                        'new_data' => $changes,
+
+                        /*
+                         * Alias untuk kebutuhan tampilan.
+                         */
                         'changes' => $changes,
                     ],
                 ],
@@ -152,92 +300,99 @@ class TimelineObserver
         }
     }
 
+    /**
+     * URL halaman berdasarkan model.
+     */
     private function pageUrl(Model $model): string
     {
         return match (class_basename($model)) {
 
-            'DataPribadi' =>
-                'data_pribadi',
+            'DataPribadi'
+                => 'data_pribadi',
 
-            'Kependudukan' =>
-                'kependudukan',
+            'Kependudukan'
+                => 'kependudukan',
 
-            'Keluarga' =>
-                'keluarga',
+            'Keluarga'
+                => 'keluarga',
 
-            'Kontak' =>
-                'kontak',
+            'Kontak'
+                => 'kontak',
 
-            'Kepegawaian' =>
-                'kepegawaian',
+            'Kepegawaian'
+                => 'kepegawaian',
 
-            'ProfilAkademik' =>
-                'profil_akademik',
+            'ProfilAkademik'
+                => 'profil_akademik',
 
-            'PasFoto' =>
-                'pas_foto',
+            'PasFoto'
+                => 'pas_foto',
 
-            'JabatanStruktural' =>
-                'jabatan_struktural',
+            'JabatanStruktural'
+                => 'jabatan_struktural',
 
-            'JabatanFungsional' =>
-                'jabatan_fungsional',
+            'JabatanFungsional'
+                => 'jabatan_fungsional',
 
-            'ImpassingDanKepangkatan' =>
-                'impassing_dan_kepangkatan',
+            'ImpassingDanKepangkatan'
+                => 'impassing_dan_kepangkatan',
 
-            'Diklat' =>
-                'diklat',
+            'Diklat'
+                => 'diklat',
 
-            'Penempatan' =>
-                'penempatan',
-            default =>
-                url('/'),
+            'Penempatan'
+                => 'penempatan',
+
+            default
+                => url('/'),
         };
     }
 
+    /**
+     * Nama jenis data.
+     */
     private function openedWith(Model $model): string
     {
         return match (class_basename($model)) {
 
-            'DataPribadi' =>
-                'data_pribadi',
+            'DataPribadi'
+                => 'data_pribadi',
 
-            'Kependudukan' =>
-                'kependudukan',
+            'Kependudukan'
+                => 'kependudukan',
 
-            'Keluarga' =>
-                'keluarga',
+            'Keluarga'
+                => 'keluarga',
 
-            'Kontak' =>
-                'kontak',
+            'Kontak'
+                => 'kontak',
 
-            'Kepegawaian' =>
-                'kepegawaian',
+            'Kepegawaian'
+                => 'kepegawaian',
 
-            'ProfilAkademik' =>
-                'profil_akademik',
+            'ProfilAkademik'
+                => 'profil_akademik',
 
-            'PasFoto' =>
-                'pas_foto',
+            'PasFoto'
+                => 'pas_foto',
 
-            'JabatanStruktural' =>
-                'jabatan_struktural',
+            'JabatanStruktural'
+                => 'jabatan_struktural',
 
-            'JabatanFungsional' =>
-                'jabatan_fungsional',
+            'JabatanFungsional'
+                => 'jabatan_fungsional',
 
-            'ImpassingDanKepangkatan' =>
-                'impassing_dan_kepangkatan',
+            'ImpassingDanKepangkatan'
+                => 'impassing_dan_kepangkatan',
 
-            'Diklat' =>
-                'diklat',
+            'Diklat'
+                => 'diklat',
 
-            'Penempatan' =>
-                'penempatan',
+            'Penempatan'
+                => 'penempatan',
 
-            default =>
-                strtolower(
+            default
+                => strtolower(
                     preg_replace(
                         '/(?<!^)[A-Z]/',
                         '_$0',

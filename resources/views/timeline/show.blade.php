@@ -4,38 +4,200 @@
 
 @section('content')
 
+{{-- =========================================================
+     FLASH MESSAGE
+========================================================= --}}
+
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+        {{ session('success') }}
+
+        <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close">
+        </button>
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+        {{ session('error') }}
+
+        <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close">
+        </button>
+    </div>
+@endif
+
+
 @php
-    $log = $timeline->log ?? [];
 
-    //dd($log['log_id']);
-    //dd($log, \App\Models\Timeline::find($log['log_id'])->log, \App\Models\DataPribadi::find($log['send_id'])->Nama);
-    if (!isset($log['log_id'])) {
-        $type = $log['type'] ?? 'data_update';
-        $action = $log['action'] ?? 'Aktivitas';
-        $status = $log['status'] ?? 'done';
-        $decision = $log['decision'] ?? null;
-        $openedWith = $log['opened_with'] ?? 'Tidak diketahui';
+    /*
+    |--------------------------------------------------------------------------
+    | LOG TIMELINE
+    |--------------------------------------------------------------------------
+    */
 
-        $data = $log['data'] ?? [];
-        $changes = $data['changes'] ?? [];
+    $timelineLog = $timeline->log ?? [];
 
-        $sender = \App\Models\DataPribadi::find($log['send_id']);
-    }else{
-        $lastlog = $log;
-        $log = \App\Models\Timeline::find(
-            $lastlog['log_id'])->log;
-        $type = $log['type'] ?? 'data_update';
-        $action = $log['action'] ?? 'Aktivitas';
-        $status = $log['status'] ?? 'done';
-        $decision = $log['decision'] ?? null;
-        $openedWith = $log['opened_with'] ?? 'Tidak diketahui';
+    /*
+    |--------------------------------------------------------------------------
+    | DEFAULT VALUE
+    |--------------------------------------------------------------------------
+    */
 
-        $data = $log['data'] ?? [];
-        $changes = $data['changes'] ?? [];
+    $type = $timelineLog['type'] ?? 'data_update';
 
-        $sender = \App\Models\DataPribadi::find($timeline['user_id']);
+    $action = $timelineLog['action'] ?? 'Aktivitas';
+
+    $status = $timelineLog['status'] ?? 'done';
+
+    $decision = $timelineLog['decision'] ?? null;
+
+    $openedWith = $timelineLog['opened_with']
+        ?? 'Tidak diketahui';
+
+    /*
+    |--------------------------------------------------------------------------
+    | TIMELINE ASAL
+    |--------------------------------------------------------------------------
+    |
+    | Jika ini merupakan notifikasi keputusan,
+    | log_id menunjuk ke Timeline perubahan asli.
+    |
+    */
+
+    $sourceLog = $timelineLog;
+
+    if (
+        ($timelineLog['type'] ?? null) === 'decision'
+        && !empty($timelineLog['log_id'])
+    ) {
+
+        $originalTimeline = \App\Models\Timeline::find(
+            $timelineLog['log_id']
+        );
+
+        if ($originalTimeline) {
+            $sourceLog = $originalTimeline->log ?? [];
+        }
     }
-    
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DATA PERUBAHAN
+    |--------------------------------------------------------------------------
+    */
+
+    $data = $sourceLog['data'] ?? [];
+
+    /*
+     * Data sebelum perubahan.
+     */
+    $oldData = $data['old_data'] ?? [];
+
+    /*
+     * Data setelah perubahan.
+     */
+    $newData = $data['new_data']
+        ?? $data['changes']
+        ?? [];
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACTION
+    |--------------------------------------------------------------------------
+    |
+    | Untuk Timeline keputusan, action berasal dari Timeline
+    | keputusan. Untuk Timeline biasa berasal dari Timeline
+    | perubahan.
+    |
+    */
+
+    if ($type === 'decision') {
+
+        $action = $timelineLog['action']
+            ?? $timelineLog['decision']
+            ?? 'Keputusan';
+
+    } else {
+
+        $action = $sourceLog['action']
+            ?? 'Aktivitas';
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | JENIS DATA
+    |--------------------------------------------------------------------------
+    */
+
+    $openedWith = $sourceLog['opened_with']
+        ?? 'Tidak diketahui';
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PENGIRIM
+    |--------------------------------------------------------------------------
+    */
+
+    $sender = null;
+
+    if ($type === 'decision') {
+
+        /*
+         * Pada Timeline keputusan:
+         *
+         * send_id = ID User admin.
+         *
+         * Jadi cari User terlebih dahulu.
+         */
+        if (!empty($timelineLog['send_id'])) {
+
+            $senderUser = \App\Models\User::find(
+                $timelineLog['send_id']
+            );
+
+            $sender = $senderUser?->dataPribadi;
+        }
+
+    } else {
+
+        /*
+         * Pada Timeline perubahan:
+         *
+         * send_id = ID DataPribadi user.
+         */
+        if (!empty($sourceLog['send_id'])) {
+
+            $sender = \App\Models\DataPribadi::find(
+                $sourceLog['send_id']
+            );
+        }
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FIELD YANG BERUBAH
+    |--------------------------------------------------------------------------
+    */
+
+    $changeKeys = array_unique(
+        array_merge(
+            array_keys($oldData),
+            array_keys($newData)
+        )
+    );
 
 @endphp
 
@@ -44,7 +206,11 @@
 
     <div class="card border-0 shadow-sm">
 
-        {{-- HEADER --}}
+
+        {{-- =====================================================
+             HEADER
+        ====================================================== --}}
+
         <div class="card-header bg-success text-white py-3">
 
             <div class="d-flex justify-content-between align-items-center">
@@ -60,16 +226,21 @@
                         @if($type === 'decision')
 
                             @if($decision === 'approved')
+
                                 Keputusan Disetujui
 
                             @elseif($decision === 'rejected')
+
                                 Keputusan Ditolak
 
                             @elseif($decision === 'pending')
+
                                 Keputusan Ditunda
 
                             @else
+
                                 Keputusan Admin
+
                             @endif
 
                         @else
@@ -84,7 +255,8 @@
 
 
                 {{-- STATUS --}}
-                <div class="d-flex gap-2">
+
+                <div class="d-flex gap-2 flex-wrap">
 
                     @if($status === 'unread')
 
@@ -128,10 +300,17 @@
         </div>
 
 
-        {{-- BODY --}}
+        {{-- =====================================================
+             BODY
+        ====================================================== --}}
+
         <div class="card-body p-4">
 
-            {{-- INFORMASI --}}
+
+            {{-- =================================================
+                 INFORMASI TIMELINE
+            ================================================== --}}
+
             <div class="mb-4">
 
                 <h5 class="fw-bold mb-3">
@@ -140,7 +319,9 @@
 
                 <div class="row g-3">
 
-                    {{-- Aktivitas --}}
+
+                    {{-- AKTIVITAS --}}
+
                     <div class="col-md-4">
 
                         <div class="text-muted small">
@@ -154,7 +335,8 @@
                     </div>
 
 
-                    {{-- Jenis Data --}}
+                    {{-- JENIS DATA --}}
+
                     <div class="col-md-4">
 
                         <div class="text-muted small">
@@ -162,6 +344,7 @@
                         </div>
 
                         <div class="fw-semibold">
+
                             {{ ucfirst(
                                 str_replace(
                                     '_',
@@ -169,12 +352,14 @@
                                     $openedWith
                                 )
                             ) }}
+
                         </div>
 
                     </div>
 
 
-                    {{-- Waktu --}}
+                    {{-- WAKTU --}}
+
                     <div class="col-md-4">
 
                         <div class="text-muted small">
@@ -182,13 +367,18 @@
                         </div>
 
                         <div class="fw-semibold">
-                            {{ $timeline->created_at->format('d-m-Y H:i:s') }}
+
+                            {{ $timeline->created_at
+                                ->format('d-m-Y H:i:s')
+                            }}
+
                         </div>
 
                     </div>
 
 
-                    {{-- Status --}}
+                    {{-- STATUS --}}
+
                     <div class="col-md-4">
 
                         <div class="text-muted small">
@@ -202,7 +392,8 @@
                     </div>
 
 
-                    {{-- Keputusan --}}
+                    {{-- KEPUTUSAN --}}
+
                     <div class="col-md-4">
 
                         <div class="text-muted small">
@@ -228,7 +419,8 @@
                     </div>
 
 
-                    {{-- Pengirim --}}
+                    {{-- PENGIRIM --}}
+
                     <div class="col-md-4">
 
                         <div class="text-muted small">
@@ -236,7 +428,9 @@
                         </div>
 
                         <div class="fw-semibold">
-                                {{ $sender?->Nama ?? '-' }}
+
+                            {{ $sender?->Nama ?? '-' }}
+
                         </div>
 
                     </div>
@@ -249,10 +443,14 @@
             <hr>
 
 
-            {{-- PERUBAHAN DATA --}}
+            {{-- =================================================
+                 PERUBAHAN DATA
+            ================================================== --}}
+
             @if($type !== 'decision')
 
                 <div class="mt-4">
+
 
                     <div class="d-flex justify-content-between align-items-center mb-3">
 
@@ -260,10 +458,13 @@
                             Perubahan Data
                         </h5>
 
-                        @if(count($changes) > 0)
+                        @if(count($changeKeys) > 0)
 
                             <span class="badge bg-success">
-                                {{ count($changes) }} perubahan
+
+                                {{ count($changeKeys) }}
+                                perubahan
+
                             </span>
 
                         @endif
@@ -271,17 +472,55 @@
                     </div>
 
 
-                    @if(count($changes) > 0)
+                    @if(count($changeKeys) > 0)
 
                         <div class="border rounded overflow-hidden">
 
-                            @foreach($changes as $key => $value)
+
+                            {{-- HEADER TABEL --}}
+
+                            <div class="row g-0 bg-light border-bottom">
+
+                                <div class="col-md-3 px-3 py-3 fw-bold">
+                                    Field
+                                </div>
+
+                                <div class="col-md-4 px-3 py-3 fw-bold">
+                                    Data Sebelumnya
+                                </div>
+
+                                <div class="col-md-5 px-3 py-3 fw-bold">
+                                    Data Baru
+                                </div>
+
+                            </div>
+
+
+                            {{-- DATA PERUBAHAN --}}
+
+                            @foreach($changeKeys as $key)
+
+                                @php
+
+                                    $oldValue =
+                                        $oldData[$key] ?? null;
+
+                                    $newValue =
+                                        $newData[$key] ?? null;
+
+                                @endphp
+
 
                                 <div class="row g-0
-                                    {{ !$loop->last ? 'border-bottom' : '' }}">
+                                    {{ !$loop->last
+                                        ? 'border-bottom'
+                                        : ''
+                                    }}">
+
 
                                     {{-- FIELD --}}
-                                    <div class="col-md-4 bg-light px-3 py-3 fw-bold">
+
+                                    <div class="col-md-3 px-3 py-3 fw-bold">
 
                                         {{ ucfirst(
                                             str_replace(
@@ -294,30 +533,68 @@
                                     </div>
 
 
-                                    {{-- NILAI --}}
-                                    <div class="col-md-8 px-3 py-3">
+                                    {{-- DATA LAMA --}}
 
-                                        @if(is_null($value))
+                                    <div class="col-md-4 px-3 py-3">
+
+                                        @if(is_null($oldValue))
 
                                             <span class="text-muted">
                                                 -
                                             </span>
 
-                                        @elseif(is_bool($value))
+                                        @elseif(is_bool($oldValue))
 
-                                            {{ $value ? 'Ya' : 'Tidak' }}
+                                            {{ $oldValue
+                                                ? 'Ya'
+                                                : 'Tidak'
+                                            }}
 
-                                        @elseif(is_array($value))
+                                        @elseif(is_array($oldValue))
 
                                             <pre class="mb-0 small">{{ json_encode(
-                                                $value,
+                                                $oldValue,
                                                 JSON_PRETTY_PRINT |
                                                 JSON_UNESCAPED_UNICODE
                                             ) }}</pre>
 
                                         @else
 
-                                            {{ $value }}
+                                            {{ $oldValue }}
+
+                                        @endif
+
+                                    </div>
+
+
+                                    {{-- DATA BARU --}}
+
+                                    <div class="col-md-5 px-3 py-3">
+
+                                        @if(is_null($newValue))
+
+                                            <span class="text-muted">
+                                                -
+                                            </span>
+
+                                        @elseif(is_bool($newValue))
+
+                                            {{ $newValue
+                                                ? 'Ya'
+                                                : 'Tidak'
+                                            }}
+
+                                        @elseif(is_array($newValue))
+
+                                            <pre class="mb-0 small">{{ json_encode(
+                                                $newValue,
+                                                JSON_PRETTY_PRINT |
+                                                JSON_UNESCAPED_UNICODE
+                                            ) }}</pre>
+
+                                        @else
+
+                                            {{ $newValue }}
 
                                         @endif
 
@@ -329,10 +606,13 @@
 
                         </div>
 
+
                     @else
 
                         <div class="alert alert-light border text-muted mb-0">
+
                             Tidak ada perubahan data.
+
                         </div>
 
                     @endif
@@ -342,7 +622,79 @@
             @endif
 
 
-            {{-- KEPUTUSAN ADMIN --}}
+            {{-- =================================================
+                 HASIL KEPUTUSAN
+            ================================================== --}}
+
+            @if($type === 'decision' && $decision)
+
+                <hr class="my-4">
+
+                <div>
+
+                    <h5 class="fw-bold mb-3">
+                        Hasil Keputusan
+                    </h5>
+
+
+                    @if($decision === 'approved')
+
+                        <div class="alert alert-primary mb-0">
+
+                            <strong>
+                                ✓ Disetujui
+                            </strong>
+
+                            <div class="small mt-1">
+                                Perubahan data telah disetujui
+                                oleh admin.
+                            </div>
+
+                        </div>
+
+
+                    @elseif($decision === 'rejected')
+
+                        <div class="alert alert-danger mb-0">
+
+                            <strong>
+                                ✕ Ditolak
+                            </strong>
+
+                            <div class="small mt-1">
+                                Perubahan data telah ditolak
+                                oleh admin.
+                            </div>
+
+                        </div>
+
+
+                    @elseif($decision === 'pending')
+
+                        <div class="alert alert-warning mb-0">
+
+                            <strong>
+                                ⏳ Ditunda
+                            </strong>
+
+                            <div class="small mt-1">
+                                Perubahan data masih menunggu
+                                keputusan lebih lanjut.
+                            </div>
+
+                        </div>
+
+                    @endif
+
+                </div>
+
+            @endif
+
+
+            {{-- =================================================
+                 KEPUTUSAN ADMIN
+            ================================================== --}}
+
             @if(
                 auth()->user()->roles->contains('name', 'admin')
                 && $type !== 'decision'
@@ -358,19 +710,24 @@
                     </h5>
 
                     <p class="text-muted mb-3">
-                        Tentukan keputusan terhadap perubahan data
-                        yang dikirim oleh user.
+                        Tentukan keputusan terhadap perubahan
+                        data yang dikirim oleh user.
                     </p>
 
 
                     <div class="d-flex gap-2 flex-wrap">
 
+
                         {{-- APPROVED --}}
+
                         <form
-                            action="{{ route('timeline.decision', [
-                                'id' => $timeline->id,
-                                'decision' => 'approved',
-                            ]) }}"
+                            action="{{ route(
+                                'timeline.decision',
+                                [
+                                    'id' => $timeline->id,
+                                    'decision' => 'approved',
+                                ]
+                            ) }}"
                             method="POST"
                         >
 
@@ -387,11 +744,15 @@
 
 
                         {{-- REJECTED --}}
+
                         <form
-                            action="{{ route('timeline.decision', [
-                                'id' => $timeline->id,
-                                'decision' => 'rejected',
-                            ]) }}"
+                            action="{{ route(
+                                'timeline.decision',
+                                [
+                                    'id' => $timeline->id,
+                                    'decision' => 'rejected',
+                                ]
+                            ) }}"
                             method="POST"
                         >
 
@@ -408,11 +769,15 @@
 
 
                         {{-- PENDING --}}
+
                         <form
-                            action="{{ route('timeline.decision', [
-                                'id' => $timeline->id,
-                                'decision' => 'pending',
-                            ]) }}"
+                            action="{{ route(
+                                'timeline.decision',
+                                [
+                                    'id' => $timeline->id,
+                                    'decision' => 'pending',
+                                ]
+                            ) }}"
                             method="POST"
                         >
 
@@ -420,7 +785,7 @@
 
                             <button
                                 type="submit"
-                                class="btn btn-warning px-4"
+                                class="btn btn-warning text-dark px-4"
                             >
                                 ⏳ Tunda
                             </button>
@@ -431,10 +796,18 @@
 
                 </div>
 
+            @endif
 
-            @elseif($decision)
 
-                {{-- HASIL KEPUTUSAN --}}
+            {{-- =================================================
+                 KEPUTUSAN PADA TIMELINE ASLI
+            ================================================== --}}
+
+            @if(
+                $type !== 'decision'
+                && $decision
+            )
+
                 <hr class="my-4">
 
                 <div>
@@ -448,10 +821,13 @@
 
                         <div class="alert alert-primary mb-0">
 
-                            <strong>✓ Disetujui</strong>
+                            <strong>
+                                ✓ Disetujui
+                            </strong>
 
                             <div class="small mt-1">
-                                Perubahan data telah disetujui oleh admin.
+                                Perubahan data telah disetujui
+                                oleh admin.
                             </div>
 
                         </div>
@@ -461,10 +837,13 @@
 
                         <div class="alert alert-danger mb-0">
 
-                            <strong>✕ Ditolak</strong>
+                            <strong>
+                                ✕ Ditolak
+                            </strong>
 
                             <div class="small mt-1">
-                                Perubahan data telah ditolak oleh admin.
+                                Perubahan data telah ditolak
+                                oleh admin.
                             </div>
 
                         </div>
@@ -474,11 +853,13 @@
 
                         <div class="alert alert-warning mb-0">
 
-                            <strong>⏳ Ditunda</strong>
+                            <strong>
+                                ⏳ Ditunda
+                            </strong>
 
                             <div class="small mt-1">
-                                Perubahan data masih menunggu keputusan
-                                lebih lanjut.
+                                Perubahan data masih menunggu
+                                keputusan lebih lanjut.
                             </div>
 
                         </div>
@@ -492,19 +873,27 @@
         </div>
 
 
-        {{-- FOOTER --}}
+        {{-- =====================================================
+             FOOTER
+        ====================================================== --}}
+
         <div class="card-footer bg-transparent py-3">
 
-            @if(!empty($log['pageUrl']) && $type !== 'decision')
+
+            @if(
+                !empty($sourceLog['pageUrl'])
+                && $type !== 'decision'
+            )
 
                 <a
-                    href="{{ $log['pageUrl'] }}"
+                    href="{{ $sourceLog['pageUrl'] }}"
                     class="btn btn-success me-2"
                 >
                     Buka Data
                 </a>
 
             @endif
+
 
             <a
                 href="{{ route('timeline.index') }}"

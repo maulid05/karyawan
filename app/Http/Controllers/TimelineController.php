@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DataPribadi;
 use App\Models\Timeline;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TimelineController extends Controller
 {
@@ -23,7 +25,6 @@ class TimelineController extends Controller
     /**
      * Menampilkan detail Timeline.
      *
-     * Saat notifikasi dibuka:
      * unread -> done
      */
     public function show($id)
@@ -38,7 +39,7 @@ class TimelineController extends Controller
             $log['status'] = 'done';
 
             $timeline->log = $log;
-            $timeline->save();
+            $timeline->saveQuietly();
         }
 
         return view('timeline.show', compact('timeline'));
@@ -58,7 +59,7 @@ class TimelineController extends Controller
         $log['status'] = 'done';
 
         $timeline->log = $log;
-        $timeline->save();
+        $timeline->saveQuietly();
 
         return response()->json([
             'success' => true,
@@ -76,14 +77,13 @@ class TimelineController extends Controller
             ->get();
 
         foreach ($timelines as $timeline) {
-
             $log = $timeline->log ?? [];
 
             if (($log['status'] ?? null) === 'unread') {
                 $log['status'] = 'done';
 
                 $timeline->log = $log;
-                $timeline->save();
+                $timeline->saveQuietly();
             }
         }
 
@@ -96,48 +96,64 @@ class TimelineController extends Controller
     /**
      * Admin memberikan keputusan terhadap Timeline.
      *
-     * Alur:
+     * APPROVED
+     *     -> Terapkan new_data ke database.
      *
-     * Timeline Admin
-     *      ↓
-     * update decision
-     *      ↓
-     * status admin = done
-     *      ↓
-     * buat Timeline baru untuk pengirim
-     *      ↓
-     * status client = unread
+     * REJECTED
+     *     -> Database tetap menggunakan data lama.
+     *
+     * PENDING
+     *     -> Database tetap menggunakan data lama.
+     *
+     * Setelah keputusan:
+     *     -> Update Timeline admin.
+     *     -> Buat Timeline keputusan untuk user.
      */
     public function decision($id, $decision)
     {
         /*
-         * Ambil Timeline milik admin yang sedang login.
+         * =====================================================
+         * 1. VALIDASI DECISION
+         * =====================================================
+         */
+        if (!in_array($decision, [
+            'approved',
+            'rejected',
+            'pending',
+        ], true)) {
+            abort(404);
+        }
+
+        /*
+         * =====================================================
+         * 2. PASTIKAN USER ADALAH ADMIN
+         * =====================================================
+         *
+         * Project menggunakan relasi roles(),
+         * bukan method hasRole().
+         */
+        if (
+            !Auth::user()
+                ->roles()
+                ->where('name', 'admin')
+                ->exists()
+        ) {
+            abort(403);
+        }
+
+        /*
+         * =====================================================
+         * 3. AMBIL TIMELINE ADMIN
+         * =====================================================
          */
         $timeline = Auth::user()
             ->timeline()
             ->findOrFail($id);
 
-        /*
-         * Keputusan yang diperbolehkan.
-         */
-        $allowed = [
-            'approved',
-            'rejected',
-            'pending',
-        ];
-
-        if (!in_array($decision, $allowed)) {
-            abort(404);
-        }
-
-        /*
-         * Ambil log Timeline.
-         */
         $log = $timeline->log ?? [];
 
         /*
-         * Timeline keputusan tidak boleh
-         * diproses kembali.
+         * Timeline keputusan tidak boleh diproses lagi.
          */
         if (($log['type'] ?? null) === 'decision') {
             return back()->with(
@@ -147,12 +163,55 @@ class TimelineController extends Controller
         }
 
         /*
-         * ==========================================
-         * PENGIRIM ASLI
-         * ==========================================
+         * Timeline yang sudah mempunyai keputusan
+         * tidak boleh diproses lagi.
+         */
+        if (!empty($log['decision'])) {
+            return back()->with(
+                'error',
+                'Timeline ini sudah memiliki keputusan.'
+            );
+        }
+
+        /*
+         * =====================================================
+         * 4. AMBIL DATA PERUBAHAN
+         * =====================================================
+         */
+        $data = $log['data'] ?? [];
+
+        /*
+         * Class model yang berubah.
          *
-         * send_id pada Timeline Admin adalah
-         * ID DataPribadi milik user pengirim.
+         * Contoh:
+         * App\Models\DataPribadi
+         */
+        $modelClass = $data['model'] ?? null;
+
+        /*
+         * ID record yang berubah.
+         */
+        $modelId = $data['model_id'] ?? null;
+
+        /*
+         * Data sebelum perubahan.
+         */
+        $oldData = $data['old_data'] ?? [];
+
+        /*
+         * Data setelah perubahan.
+         */
+        $newData = $data['new_data']
+            ?? $data['changes']
+            ?? [];
+
+        /*
+         * =====================================================
+         * 5. CARI USER PENGIRIM
+         * =====================================================
+         *
+         * send_id pada Timeline perubahan adalah
+         * ID DataPribadi user.
          */
         $senderId = $log['send_id'] ?? null;
 
@@ -164,84 +223,179 @@ class TimelineController extends Controller
         }
 
         /*
-         * ==========================================
-         * UPDATE TIMELINE ADMIN
-         * ==========================================
+         * Cari DataPribadi.
          */
-        $log['status'] = 'done';
-        $log['decision'] = $decision;
+        $sender = DataPribadi::find($senderId);
 
-        $timeline->log = $log;
-        $timeline->save();
+        if (!$sender) {
+            return back()->with(
+                'error',
+                'Data pribadi pengirim tidak ditemukan.'
+            );
+        }
 
         /*
-         * ==========================================
-         * BUAT TIMELINE KEPUTUSAN UNTUK CLIENT
-         * ==========================================
-         *
-         * send_id  = Admin sebagai pengirim
-         * user_id  = tujuan
-         *
-         * log_id   = Timeline asli yang diputuskan.
+         * User pemilik DataPribadi.
          */
-        Timeline::create([
+        $senderUserId = $sender->user_id;
+
+        if (!$senderUserId) {
+            return back()->with(
+                'error',
+                'User pengirim tidak ditemukan.'
+            );
+        }
+
+        /*
+         * =====================================================
+         * 6. APPROVED
+         * =====================================================
+         *
+         * Hanya approved yang menerapkan new_data.
+         */
+        if ($decision === 'approved') {
+
             /*
-             * Tujuan.
-             *
-             * Karena send_id Timeline asli adalah
-             * ID DataPribadi, kita cari User pemiliknya.
+             * Model dan ID wajib tersedia.
              */
-            'user_id' => \App\Models\DataPribadi::findOrFail($senderId)->user_id,
+            if (!$modelClass || !$modelId) {
+                return back()->with(
+                    'error',
+                    'Referensi model tidak ditemukan. Timeline ini mungkin dibuat sebelum sistem approval diperbarui.'
+                );
+            }
 
-            'log' => [
+            /*
+             * Pastikan class model benar-benar tersedia.
+             */
+            if (!class_exists($modelClass)) {
+                return back()->with(
+                    'error',
+                    'Model perubahan tidak ditemukan: '
+                    . $modelClass
+                );
+            }
 
-                /*
-                 * Jenis notifikasi.
-                 */
-                'type' => 'decision',
+            /*
+             * Ambil record.
+             */
+            $model = $modelClass::find($modelId);
 
-                /*
-                 * approved / rejected / pending
-                 */
-                'action' => $decision,
+            if (!$model) {
+                return back()->with(
+                    'error',
+                    'Data yang akan diperbarui tidak ditemukan.'
+                );
+            }
 
-                /*
-                 * Client belum membuka.
-                 */
-                'status' => 'unread',
-
-                /*
-                 * Hasil keputusan.
-                 */
-                'decision' => $decision,
-
-                /*
-                 * Data yang terkait.
-                 */
-                'opened_with' =>
-                    $log['opened_with']
-                    ?? 'Tidak diketahui',
-
-                /*
-                 * Admin adalah pengirim keputusan.
-                 */
-                'send_id' => Auth::user()->id,
-
-                /*
-                 * Referensi Timeline asli.
-                 */
-                'log_id' => $timeline->id,
-            ],
-        ]);
+            /*
+             * Terapkan data baru tanpa menjalankan
+             * event Observer.
+             */
+            if (!empty($newData)) {
+                $model->updateQuietly($newData);
+            }
+        }
 
         /*
-         * Kembali ke Timeline Admin.
+         * =====================================================
+         * 7. UPDATE TIMELINE ADMIN + NOTIFIKASI USER
+         * =====================================================
+         */
+        DB::transaction(function () use (
+            $timeline,
+            $log,
+            $decision,
+            $senderUserId,
+            $modelClass,
+            $modelId,
+            $oldData,
+            $newData
+        ) {
+
+            /*
+             * Update Timeline admin.
+             */
+            $log['status'] = 'done';
+            $log['decision'] = $decision;
+
+            $timeline->log = $log;
+            $timeline->saveQuietly();
+
+            /*
+             * Buat notifikasi keputusan untuk user.
+             */
+            Timeline::create([
+                'user_id' => $senderUserId,
+
+                'log' => [
+                    'type' => 'decision',
+
+                    'action' => $decision,
+
+                    'status' => 'unread',
+
+                    'decision' => $decision,
+
+                    'opened_with' =>
+                        $log['opened_with']
+                        ?? 'Tidak diketahui',
+
+                    /*
+                     * Pada Timeline keputusan,
+                     * send_id adalah ID User admin.
+                     */
+                    'send_id' => Auth::user()->id,
+
+                    /*
+                     * Hubungkan dengan Timeline asli.
+                     */
+                    'log_id' => $timeline->id,
+
+                    /*
+                     * Simpan informasi perubahan.
+                     */
+                    'data' => [
+                        'model' => $modelClass,
+
+                        'model_id' => $modelId,
+
+                        'old_data' => $oldData,
+
+                        'new_data' => $newData,
+
+                        'changes' => $newData,
+                    ],
+                ],
+            ]);
+        });
+
+        /*
+         * =====================================================
+         * 8. REDIRECT
+         * =====================================================
          */
         return redirect()
-            ->route('timeline.show', $timeline->id)
+            ->route(
+                'timeline.show',
+                $timeline->id
+            )
             ->with(
                 'success',
-                'Keputusan berhasil disimpan dan notifikasi telah dikirim kepada client.'
+                match ($decision) {
+
+                    'approved' =>
+                        'Perubahan berhasil disetujui dan diterapkan. Notifikasi telah dikirim kepada user.',
+
+                    'rejected' =>
+                        'Perubahan berhasil ditolak. Notifikasi telah dikirim kepada user.',
+
+                    'pending' =>
+                        'Perubahan ditandai sebagai pending. Notifikasi telah dikirim kepada user.',
+
+                    default =>
+                        'Keputusan berhasil disimpan.',
+                }
             );
     }
 }
