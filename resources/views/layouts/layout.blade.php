@@ -362,6 +362,17 @@
 
                     </li>
 
+                    <li class="nav-item">
+
+                        <a
+                            href="{{ pageUrl('MasterUserController') }}"
+                            class="nav-link"
+                        >
+                            Master User
+                        </a>
+
+                    </li>
+
 
                 {{-- CLIENT --}}
 
