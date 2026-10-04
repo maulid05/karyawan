@@ -136,4 +136,9 @@ Route::middleware('auth')->group(function () {
 
     Route::patch('/timeline/{id}/read', [TimelineController::class, 'read'])
         ->name('timeline.read');
+    
+    Route::post('/timeline', [TimelineController::class, 'store'])
+        ->name('timeline.store');
+
+
 });

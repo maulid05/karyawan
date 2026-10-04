@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 <?php
 
 namespace App\Http\Controllers;
@@ -399,3 +400,5 @@ class TimelineController extends Controller
             );
     }
 }
+=======
+>>>>>>> Stashed changes

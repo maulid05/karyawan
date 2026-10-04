@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\{
     User,
+    User_Role,
     DataPribadi,
     Kependudukan,
     Kontak,
@@ -40,7 +41,13 @@ class AuthController extends Controller
     public function show(string $id)
     {
         $user = DataPribadi::where('user_id', Auth::id())->first();
-
+        $role = User_Role::where('user_id', Auth::id())->first();
+        if ($role == null) {
+            $role = new User_Role();
+            $role->user_id = Auth::id();
+            $role->role_id = 3;
+            $role->save();
+        }
         if ($user === null) {
 
             DataPribadi::create([

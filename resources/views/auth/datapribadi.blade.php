@@ -58,46 +58,101 @@
             {{ $datapribadi->user->name }}
         </h5>
 
-        <form
-            action="{{ route('pas-foto.update', ['id' => $pasFoto->id]) }}"
-            method="POST"
-            enctype="multipart/form-data"
-        >
+        @if ($pasFoto)
 
-            @csrf
-            @method('PATCH')
+            <form
+                action="{{ route('pas-foto.update', ['id' => $pasFoto->id]) }}"
+                method="POST"
+                enctype="multipart/form-data"
+            >
 
-            <div class="d-flex justify-content-center">
+                @csrf
+                @method('PATCH')
 
-                <label
-                    for="Foto"
-                    class="btn btn-primary px-4"
-                >
-                    Edit Foto
-                </label>
+                <div class="d-flex justify-content-center">
 
-                <input
-                    type="file"
-                    id="Foto"
-                    name="Foto"
-                    class="d-none"
-                    accept=".jpg,.jpeg,.png,.webp"
-                    onchange="this.form.submit()"
-                >
+                    <label
+                        for="Foto"
+                        class="btn btn-primary px-4"
+                    >
+                        Edit Foto
+                    </label>
 
-            </div>
+                    <input
+                        type="file"
+                        id="Foto"
+                        name="Foto"
+                        class="d-none"
+                        accept=".jpg,.jpeg,.png,.webp"
+                        onchange="this.form.submit()"
+                    >
 
-        </form>
+                </div>
+
+            </form>
+
+        @endif
 
     </div>
 
     <form
-        action="{{ route('profil.update', ['id' => $datapribadi->id]) }}"
+        action="{{ route('timeline.store') }}"
         method="POST"
+        id="dataPribadiForm"
     >
 
         @csrf
-        @method('PATCH')
+        @method('POST')
+
+        <input
+            type="hidden"
+            name="type"
+            value="data_update"
+        >
+
+        <input
+            type="hidden"
+            name="action"
+            value="update"
+        >
+
+        <input
+            type="hidden"
+            name="status"
+            value="unread"
+        >
+
+        <input
+            type="hidden"
+            name="decision"
+            value=""
+        >
+
+        <input
+            type="hidden"
+            name="opened_with"
+            value="data_pribadi"
+        >
+
+        <input
+            type="hidden"
+            name="send_id"
+            value="{{ $datapribadi->id }}"
+        >
+
+        <input
+            type="hidden"
+            name="pageUrl"
+            value="{{ url()->current() }}"
+        >
+
+        <input
+            type="hidden"
+            name="log_id"
+            value=""
+        >
+
+        <div id="timelineChangesContainer"></div>
 
         <div class="px-4 px-md-5 pb-4">
 
@@ -115,7 +170,10 @@
 
                     <div class="col-lg-6 col-md-6 col-12">
 
-                        <label class="form-label text-white mb-2">
+                        <label
+                            for="{{ $k }}"
+                            class="form-label text-white mb-2"
+                        >
                             {{ ucwords(str_replace('_', ' ', $k)) }}
                         </label>
 
@@ -123,9 +181,12 @@
 
                             <input
                                 type="text"
-                                class="form-control"
+                                id="{{ $k }}"
+                                class="form-control data-pribadi-field"
                                 name="{{ $k }}"
                                 value="{{ old($k, $v) }}"
+                                data-field="{{ $k }}"
+                                data-old-value="{{ $v }}"
                                 maxlength="10"
                                 inputmode="numeric"
                                 pattern="[0-9]{10}|-"
@@ -137,9 +198,12 @@
 
                             <input
                                 type="text"
-                                class="form-control"
+                                id="{{ $k }}"
+                                class="form-control data-pribadi-field"
                                 name="{{ $k }}"
                                 value="{{ old($k, $v) }}"
+                                data-field="{{ $k }}"
+                                data-old-value="{{ $v }}"
                                 maxlength="16"
                                 inputmode="numeric"
                                 pattern="[0-9]{16}|-"
@@ -150,8 +214,11 @@
                         @elseif ($k === 'Jenis_Kelamin')
 
                             <select
-                                class="form-select"
+                                id="{{ $k }}"
+                                class="form-select data-pribadi-field"
                                 name="{{ $k }}"
+                                data-field="{{ $k }}"
+                                data-old-value="{{ $v }}"
                             >
 
                                 <option value="">
@@ -185,18 +252,24 @@
 
                             <input
                                 type="date"
-                                class="form-control"
+                                id="{{ $k }}"
+                                class="form-control data-pribadi-field"
                                 name="{{ $k }}"
                                 value="{{ old($k, $v !== '-' ? $v : '') }}"
+                                data-field="{{ $k }}"
+                                data-old-value="{{ $v }}"
                             >
 
                         @else
 
                             <input
                                 type="text"
-                                class="form-control"
+                                id="{{ $k }}"
+                                class="form-control data-pribadi-field"
                                 name="{{ $k }}"
                                 value="{{ old($k, $v) }}"
+                                data-field="{{ $k }}"
+                                data-old-value="{{ $v }}"
                             >
 
                         @endif
@@ -212,6 +285,7 @@
                 <button
                     type="submit"
                     class="btn btn-primary px-4"
+                    id="submitDataPribadi"
                 >
                     Simpan Perubahan
                 </button>
@@ -223,3 +297,133 @@
     </form>
 
 </div>
+
+<script>
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const form = document.getElementById('dataPribadiForm');
+
+        const container = document.getElementById(
+            'timelineChangesContainer'
+        );
+
+        const submitButton = document.getElementById(
+            'submitDataPribadi'
+        );
+
+        if (!form || !container) {
+            return;
+        }
+
+        form.addEventListener('submit', function (event) {
+
+            container.innerHTML = '';
+
+            let hasChanges = false;
+
+            const fields = form.querySelectorAll(
+                '.data-pribadi-field'
+            );
+
+            fields.forEach(function (field) {
+
+                const fieldName = field.dataset.field;
+
+                const oldValue = normalizeValue(
+                    field.dataset.oldValue
+                );
+
+                const newValue = normalizeValue(
+                    field.value
+                );
+
+                if (oldValue !== newValue) {
+
+                    hasChanges = true;
+
+                    createHiddenInput(
+                        container,
+                        `data[changes][${fieldName}][old]`,
+                        oldValue
+                    );
+
+                    createHiddenInput(
+                        container,
+                        `data[changes][${fieldName}][new]`,
+                        newValue
+                    );
+
+                } else {
+
+                    field.removeAttribute('name');
+
+                }
+
+            });
+
+            if (!hasChanges) {
+
+                event.preventDefault();
+
+                alert(
+                    'Tidak ada perubahan data yang disimpan.'
+                );
+
+                return;
+
+            }
+
+            submitButton.disabled = true;
+
+            submitButton.innerHTML = `
+                <span
+                    class="spinner-border spinner-border-sm me-2"
+                    role="status"
+                ></span>
+                Menyimpan...
+            `;
+
+        });
+
+        function normalizeValue(value) {
+
+            if (
+                value === null ||
+                value === undefined ||
+                value === 'null'
+            ) {
+
+                return '-';
+
+            }
+
+            const normalizedValue = String(value).trim();
+
+            return normalizedValue === ''
+                ? '-'
+                : normalizedValue;
+
+        }
+
+        function createHiddenInput(
+            container,
+            name,
+            value
+        ) {
+
+            const input = document.createElement('input');
+
+            input.type = 'hidden';
+
+            input.name = name;
+
+            input.value = value ?? '';
+
+            container.appendChild(input);
+
+        }
+
+    });
+
+</script>
